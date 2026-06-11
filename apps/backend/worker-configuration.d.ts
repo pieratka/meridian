@@ -5,8 +5,6 @@ declare namespace Cloudflare {
 	interface Env {
 		DATABASE_URL: string;
 		GEMINI_API_KEY: string;
-		MERIDIAN_ML_SERVICE_URL: string;
-		MERIDIAN_ML_SERVICE_API_TOKEN: string;
 		API_TOKEN: string;
 		DATA_SOURCE_INGESTOR: DurableObjectNamespace<import("./src/index").DataSourceIngestorDO>;
 		ARTICLES_BUCKET: R2Bucket;
@@ -20,7 +18,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "DATABASE_URL" | "GEMINI_API_KEY" | "MERIDIAN_ML_SERVICE_URL" | "MERIDIAN_ML_SERVICE_API_TOKEN" | "API_TOKEN">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "DATABASE_URL" | "GEMINI_API_KEY" | "API_TOKEN">> {}
 }
 
 // Begin runtime types

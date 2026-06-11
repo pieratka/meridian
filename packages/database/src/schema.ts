@@ -80,7 +80,7 @@ export const $ingested_items = pgTable(
     source_specific_metadata: jsonb('source_specific_metadata'), // small, queryable metadata
 
     usedBrowser: boolean('used_browser'),
-    embedding: vector('embedding', { dimensions: 384 }),
+    embedding: vector('embedding', { dimensions: 1536 }),
     fail_reason: text('fail_reason'),
 
     data_source_id: integer('data_source_id')

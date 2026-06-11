@@ -1,39 +1,39 @@
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { embedMany } from 'ai';
 import { err, ok } from 'neverthrow';
-import { z } from 'zod';
 import type { Env } from '../index';
 import { tryCatchAsync } from './tryCatchAsync';
 
-const embeddingsResponseSchema = z.object({
-  embeddings: z.array(z.array(z.number())),
-});
+// Dimensions of the stored `embedding` vector column (see packages/database schema).
+// gemini-embedding-001 is Matryoshka: we truncate to this size at request time.
+const EMBEDDING_DIMENSIONS = 1536;
 
+/**
+ * Generates embeddings for the given texts using Gemini (gemini-embedding-001).
+ *
+ * Reuses the same Gemini credentials as the rest of the workflow. The embeddings
+ * feed cluster analysis in the brief stage, so we request taskType CLUSTERING,
+ * which optimizes the vector geometry for grouping rather than query/document
+ * retrieval asymmetry.
+ */
 export async function createEmbeddings(env: Env, texts: string[]) {
-  const response = await tryCatchAsync(
-    fetch(`${env.MERIDIAN_ML_SERVICE_URL}/embeddings`, {
-      method: 'POST',
-      body: JSON.stringify({ texts }),
-      headers: {
-        Authorization: `Bearer ${env.MERIDIAN_ML_SERVICE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+  const google = createGoogleGenerativeAI({
+    apiKey: env.GEMINI_API_KEY,
+    baseURL: env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta',
+  });
+
+  const result = await tryCatchAsync(
+    embedMany({
+      model: google.textEmbeddingModel('gemini-embedding-001', {
+        outputDimensionality: EMBEDDING_DIMENSIONS,
+        taskType: 'CLUSTERING',
+      }),
+      values: texts,
     })
   );
-  if (response.isErr()) {
-    return err(response.error);
-  }
-  if (!response.value.ok) {
-    return err(new Error(`Failed to fetch embeddings: ${response.value.statusText}`));
+  if (result.isErr()) {
+    return err(result.error);
   }
 
-  const jsonResult = await tryCatchAsync(response.value.json());
-  if (jsonResult.isErr()) {
-    return err(jsonResult.error);
-  }
-
-  const parsedResponse = embeddingsResponseSchema.safeParse(jsonResult.value);
-  if (parsedResponse.success === false) {
-    return err(new Error(`Invalid response ${JSON.stringify(parsedResponse.error)}`));
-  }
-
-  return ok(parsedResponse.data.embeddings);
+  return ok(result.value.embeddings);
 }

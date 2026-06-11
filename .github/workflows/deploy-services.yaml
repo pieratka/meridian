@@ -70,8 +70,6 @@ jobs:
             DATABASE_URL
             GEMINI_BASE_URL
             GEMINI_API_KEY
-            MERIDIAN_ML_SERVICE_URL
-            MERIDIAN_ML_SERVICE_API_KEY
         env:
           API_TOKEN: ${{ secrets.API_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
@@ -81,8 +79,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           GEMINI_BASE_URL: ${{ secrets.GEMINI_BASE_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          MERIDIAN_ML_SERVICE_URL: ${{ secrets.MERIDIAN_ML_SERVICE_URL }}
-          MERIDIAN_ML_SERVICE_API_KEY: ${{ secrets.MERIDIAN_ML_SERVICE_API_KEY }}
 
       # - name: Build Nuxt Application
       #   run: pnpm build --filter=@meridian/frontend # Or 'yarn generate', ensure this matches your static build script in package.json (npx nuxi generate)

@@ -17,7 +17,7 @@ Monorepo (Turborepo / pnpm):
 | frontend | `apps/frontend` | Nuxt 3 / Vue 3 / Tailwind | display briefs (CF Pages) |
 | briefs | `apps/briefs` | Python | clustering + brief synthesis (**manual / being revived**) |
 | database | `packages/database` | Drizzle + Postgres | schema + migrations |
-| ml-service | `services/meridian-ml-service` | FastAPI on Fly.io | embeddings (+ optional clustering) |
+| ~~ml-service~~ | ~~`services/meridian-ml-service`~~ | — | **removed** — embeddings now via Gemini API (see Phase 2) |
 
 ## Current state (June 2026)
 
@@ -35,7 +35,7 @@ Phases 0–4 are provisioning/config (need *your* accounts + keys). Phase 5 is t
 
 ### Phase 0 — Make it yours
 - [ ] Fork to your own GitHub, repoint `origin` (currently points at upstream `iliane5/meridian`).
-- [ ] Copy the three `.env.example` → `.env` (`packages/database`, `apps/frontend`, `services/meridian-ml-service`).
+- [ ] Copy the `.env.example` → `.env` (`packages/database`, `apps/frontend`).
 
 ### Phase 1 — Database  ✅ (local dev DB)
 - [x] **Local Postgres 16 via Homebrew** + **pgvector 0.8.0 built from source for pg16**
@@ -46,22 +46,18 @@ Phases 0–4 are provisioning/config (need *your* accounts + keys). Phase 5 is t
       Seeded 5 RSS sources (HN, BBC World, Al Jazeera, NPR, Guardian World).
 - [ ] **Prod**: provision cloud Postgres with pgvector (Neon/Supabase) and point prod `DATABASE_URL` at it.
 
-### Phase 2 — ML service (Google Cloud Run)  ⏳ in progress, blocked on billing
-Decided on **Cloud Run** instead of Fly (already-owned Google account; existing GCP experience;
-the Docker image is Cloud-Run-ready — `python:3.11-slim`, CPU torch, e5-small baked in, uvicorn).
-The `fly.toml` is left in place but unused.
-- [x] Installed `gcloud` (572.0.0); authenticated as **pierre@atka.io**.
-- [ ] **BLOCKER:** pierre@atka.io has **0 projects and 0 billing accounts**. Cloud Run needs a project
-      with billing enabled. Prior GCP deploys were likely under a different Google account.
-      → User is checking which account has billing before we proceed.
-- [ ] Create/select GCP project, set billing.
-- [ ] Enable APIs: `run`, `cloudbuild`, `artifactregistry`.
-- [ ] Deploy from source (Cloud Build builds the Dockerfile):
-      `gcloud run deploy meridian-ml-service --source services/meridian-ml-service \
-        --region europe-west1 --port 8080 --memory 1Gi --allow-unauthenticated \
-        --set-env-vars API_TOKEN=<strong-token>`
-      (`API_TOKEN` must equal the Worker's `MERIDIAN_ML_SERVICE_API_KEY` in Phase 3.)
-- [ ] Note the service URL → becomes `MERIDIAN_ML_SERVICE_URL`. Test `/ping` + `/embeddings`.
+### Phase 2 — ML service  ✅ ELIMINATED (no separate service, no GCP)
+**Resolved by deleting the service, not deploying it.** The self-hosted FastAPI ML service existed
+only to run `intfloat/multilingual-e5-small` embeddings. We now call **Gemini `gemini-embedding-001`**
+directly from the Worker (reusing the existing `GEMINI_API_KEY` via `@ai-sdk/google`'s `embedMany`),
+so the entire service — and the **GCP Cloud Run billing blocker** — is gone. Inspiration came from the
+[`lfzawacki/meridiano`](https://github.com/lfzawacki/meridiano) rewrite, which treats embeddings as an
+API call rather than self-hosted inference.
+- [x] Rewrote `apps/backend/src/lib/embeddings.ts` → Gemini, `taskType: 'CLUSTERING'`, 1536-dim output.
+- [x] Migrated `ingested_items.embedding` `vector(384) → vector(1536)` (migration `0004`, HNSW index rebuilt).
+- [x] Deleted `services/meridian-ml-service/` (incl. unused `fly.toml`); dropped `MERIDIAN_ML_SERVICE_*`
+      from the `Env` type, `wrangler` types, CI workflow, and `.dev.vars`.
+- Net effect: one fewer deployed service, one fewer vendor, zero GCP. Embedding cost ≈ pennies/month.
 
 ### Local validation (done) ✅
 - Ran the backend Worker via `wrangler dev` against the local `meridian` DB (Hyperdrive override:
@@ -77,7 +73,7 @@ The `fly.toml` is left in place but unused.
   - Hyperdrive id `b748bf83...` → create your own Hyperdrive → your Postgres, swap the id.
   - Create the R2 bucket (`meridian-articles-prod`), Queue + DLQ in your account.
 - [ ] Set Worker secrets: `API_TOKEN`, `DATABASE_URL`, `GEMINI_API_KEY`, `GEMINI_BASE_URL`,
-      `MERIDIAN_ML_SERVICE_URL`, `MERIDIAN_ML_SERVICE_API_KEY` (+ `AXIOM_*` if used).
+      (+ `AXIOM_*` if used). **No more `MERIDIAN_ML_SERVICE_*`** — embeddings use `GEMINI_API_KEY`.
 - [ ] Deploy, then `POST /do/admin/initialize-dos` to spin up per-source scrapers.
 
 ### Phase 4 — Frontend (CF Pages)
@@ -118,10 +114,9 @@ The only true gap was that `/events` didn't return the processed text.
 
 ### Known issues found while tracing (not yet fixed)
 
-- **Embedding prefix (quality):** `services/.../main.py` calls `compute_embeddings` **without**
-  `e5_prefix`, but multilingual-e5 expects `"passage: "`/`"query: "`. Clustering still works
-  (vectors are consistently prefix-less) but quality is suboptimal. Consider passing
-  `e5_prefix="passage: "` on the `/embeddings` endpoint.
+- ~~**Embedding prefix (quality):** e5 `passage:`/`query:` prefix was missing.~~ **Moot** — dropped
+  e5 entirely; embeddings now come from Gemini `gemini-embedding-001` with `taskType: 'CLUSTERING'`,
+  which handles task conditioning natively (no manual prefix needed).
 - **Notebook clustering drift:** cell 10 references `study.best_trial.params` (optuna) but cell 8
   is a manual grid search — `study` is undefined. The hardcoded params below it are what actually
   run; clean this up when productionizing.

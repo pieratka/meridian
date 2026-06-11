@@ -29,6 +29,13 @@
       "when": 1748576379169,
       "tag": "0003_regular_swordsman",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781190943010,
+      "tag": "0004_thick_vengeance",
+      "breakpoints": true
     }
   ]
 }

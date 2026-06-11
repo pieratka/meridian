@@ -65,7 +65,7 @@ graph TD
 
 - **Infrastructure**: Turborepo, Cloudflare (Workers, Workflows, Pages)
 - **Backend**: Hono, TypeScript, PostgreSQL, Drizzle
-- **AI/ML**: Gemini models, multilingual-e5-small embeddings, UMAP, HDBSCAN
+- **AI/ML**: Gemini models (chat + `gemini-embedding-001` embeddings), UMAP, HDBSCAN
 - **Frontend**: Nuxt 3, Vue 3, Tailwind
 
 ## Setup

@@ -24,9 +24,6 @@ export type Env = {
 
   GEMINI_API_KEY: string;
   GEMINI_BASE_URL: string;
-
-  MERIDIAN_ML_SERVICE_URL: string;
-  MERIDIAN_ML_SERVICE_API_KEY: string;
 };
 
 // Create a base logger for the queue handler
