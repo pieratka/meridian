@@ -61,35 +61,48 @@ def call_deepseek_chat(prompt, model=config.LLM_CHAT_MODEL, system_prompt=None):
             completion_kwargs["api_base"] = ollama_base
             # print(f"DEBUG: Using Ollama API Base: {ollama_base}")
 
-    try:
-        response = litellm.completion(**completion_kwargs)
-        return response["choices"][0]["message"]["content"].strip()
-    except Exception as e:
-        print(f"Error calling Deepseek Chat API: {e}")
-        # Implement retry logic or better error handling here if needed
-        time.sleep(1)  # Basic backoff
-        return None
+    # Retry with exponential backoff: hosted LLM APIs return transient 429/503s,
+    # and a silent skip here drops the article from today's brief.
+    last_err = None
+    for attempt in range(4):
+        try:
+            response = litellm.completion(**completion_kwargs)
+            return response["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            last_err = e
+            wait = 2**attempt  # 1, 2, 4, 8s
+            print(f"Error calling LLM (attempt {attempt + 1}/4): {e}. Retrying in {wait}s...")
+            time.sleep(wait)
+    print(f"Giving up on LLM call after retries: {last_err}")
+    return None
 
 
 def get_deepseek_embedding(text, model=config.EMBEDDING_MODEL):
     """Gets embeddings."""
     print(f"INFO: Attempting to get embedding for text snippet: '{text[:50]}...'")
 
-    try:
-        response = litellm.embedding(
-            api_base=embedding_client["api_base"],
-            model=model,
-            input=[text],
-        )
-        # Access the embedding vector based on the actual API response structure
-        if response["data"] and len(response["data"]) > 0:
-            return response["data"][0]["embedding"]
-        else:
-            print("Warning: No embedding returned for text.")
-            return None
-    except Exception as e:
-        print(f"Error calling Embedding API: {e}")
-        return None
+    # Retry with exponential backoff (same rationale as the chat call above).
+    last_err = None
+    for attempt in range(4):
+        try:
+            response = litellm.embedding(
+                api_base=embedding_client["api_base"],
+                model=model,
+                input=[text],
+            )
+            # Access the embedding vector based on the actual API response structure
+            if response["data"] and len(response["data"]) > 0:
+                return response["data"][0]["embedding"]
+            else:
+                print("Warning: No embedding returned for text.")
+                return None
+        except Exception as e:
+            last_err = e
+            wait = 2**attempt
+            print(f"Error calling Embedding API (attempt {attempt + 1}/4): {e}. Retrying in {wait}s...")
+            time.sleep(wait)
+    print(f"Giving up on embedding call after retries: {last_err}")
+    return None
 
 
 # --- Core Functions ---
