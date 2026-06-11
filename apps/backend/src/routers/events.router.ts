@@ -43,6 +43,12 @@ const route = new Hono<HonoEnv>().get('/', async c => {
         title: $ingested_items.display_title,
         publishDate: $ingested_items.published_at,
         contentFileKey: $ingested_items.raw_data_r2_key,
+        // processed article text (truncated to ~10KB in DB; full copy in content_body_r2_key) +
+        // the structured representation used for the embedding. Needed by the brief stage's
+        // cluster-review and deep-analysis prompts.
+        content: $ingested_items.content_body_text,
+        embeddingText: $ingested_items.embedding_text,
+        wordCount: $ingested_items.word_count,
         embedding: $ingested_items.embedding,
         createdAt: $ingested_items.ingested_at,
       })

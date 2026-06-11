@@ -1,15 +1,15 @@
 import requests
 import os
-from datetime import date
-from pydantic import BaseModel, field_validator
-from typing import Optional
-import pandas as pd
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, field_validator
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Base URL of the backend worker exposing /events. Override in prod, e.g.
+# MERIDIAN_WORKER_API="https://meridian-backend.<your-account>.workers.dev"
+WORKER_API = os.environ.get("MERIDIAN_WORKER_API", "http://localhost:8787")
 
 
 class Source(BaseModel):
@@ -18,42 +18,40 @@ class Source(BaseModel):
 
 
 class Event(BaseModel):
+    """Matches the /events endpoint after the v1 refactor.
+
+    The backend now stores a cheap per-article *representation* + embedding instead of
+    the old rich per-article analysis. The brief stage clusters on the stored `embedding`
+    and feeds `content` (the processed article text) to the cluster-analysis prompts.
+    """
+
     id: int
     sourceId: int
     url: str
-    title: str
-    publishDate: datetime  # changed from date to datetime
-    contentFileKey: str
-    primary_location: str
-    completeness: str
-    content_quality: str
-    event_summary_points: list[str]
-    thematic_keywords: list[str]
-    topic_tags: list[str]
-    key_entities: list[str]
-    content_focus: list[str]
+    title: Optional[str] = None
+    publishDate: Optional[datetime] = None
+    contentFileKey: Optional[str] = None  # raw RSS payload key (raw_data_r2_key)
+    content: Optional[str] = None  # processed article text (content_body_text)
+    embeddingText: Optional[str] = None  # structured representation used for the embedding
+    wordCount: Optional[int] = None
     embedding: list[float]
-    createdAt: datetime
+    createdAt: Optional[datetime] = None
 
-    @field_validator("publishDate", mode="before")
+    @field_validator("publishDate", "createdAt", mode="before")
     @classmethod
     def parse_date(cls, value):
         if value is None:
             return None
-
-        # Handle ISO format with timezone info
         try:
             return datetime.fromisoformat(value)
         except ValueError:
-            # For older Python versions or non-standard formats
-            # you might need dateutil
             from dateutil import parser
 
             return parser.parse(value)
 
 
 def get_events(date: str = None):
-    url = f"http://localhost:8787/events"
+    url = f"{WORKER_API}/events"
 
     if date:
         url += f"?date={date}"
@@ -62,6 +60,7 @@ def get_events(date: str = None):
         url,
         headers={"Authorization": f"Bearer {os.environ.get('MERIDIAN_SECRET_KEY')}"},
     )
+    response.raise_for_status()
     data = response.json()
 
     sources = [Source(**source) for source in data["sources"]]

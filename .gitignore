@@ -190,7 +190,10 @@ apps/scrapers/feeds.json
 
 __pycache__
 
-apps/briefs
+# briefs: track source (notebook + python), ignore generated output, logs, env
+apps/briefs/reportV5.md
+apps/briefs/**/llm_calls_log*.json
+apps/briefs/.env
 
 # python stuff
 .mypy_cache
