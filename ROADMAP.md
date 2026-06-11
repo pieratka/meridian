@@ -46,9 +46,22 @@ Phases 0–4 are provisioning/config (need *your* accounts + keys). Phase 5 is t
       Seeded 5 RSS sources (HN, BBC World, Al Jazeera, NPR, Guardian World).
 - [ ] **Prod**: provision cloud Postgres with pgvector (Neon/Supabase) and point prod `DATABASE_URL` at it.
 
-### Phase 2 — ML service (Fly.io)
-- [ ] In `services/meridian-ml-service/fly.toml`, rename `app` (name is global on Fly).
-- [ ] Set an `API_TOKEN`, `fly deploy`. Note the URL.
+### Phase 2 — ML service (Google Cloud Run)  ⏳ in progress, blocked on billing
+Decided on **Cloud Run** instead of Fly (already-owned Google account; existing GCP experience;
+the Docker image is Cloud-Run-ready — `python:3.11-slim`, CPU torch, e5-small baked in, uvicorn).
+The `fly.toml` is left in place but unused.
+- [x] Installed `gcloud` (572.0.0); authenticated as **pierre@atka.io**.
+- [ ] **BLOCKER:** pierre@atka.io has **0 projects and 0 billing accounts**. Cloud Run needs a project
+      with billing enabled. Prior GCP deploys were likely under a different Google account.
+      → User is checking which account has billing before we proceed.
+- [ ] Create/select GCP project, set billing.
+- [ ] Enable APIs: `run`, `cloudbuild`, `artifactregistry`.
+- [ ] Deploy from source (Cloud Build builds the Dockerfile):
+      `gcloud run deploy meridian-ml-service --source services/meridian-ml-service \
+        --region europe-west1 --port 8080 --memory 1Gi --allow-unauthenticated \
+        --set-env-vars API_TOKEN=<strong-token>`
+      (`API_TOKEN` must equal the Worker's `MERIDIAN_ML_SERVICE_API_KEY` in Phase 3.)
+- [ ] Note the service URL → becomes `MERIDIAN_ML_SERVICE_URL`. Test `/ping` + `/embeddings`.
 
 ### Local validation (done) ✅
 - Ran the backend Worker via `wrangler dev` against the local `meridian` DB (Hyperdrive override:
