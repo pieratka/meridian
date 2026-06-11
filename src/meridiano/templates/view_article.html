@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+{% set title = "Article: %s" % article.get('title', 'Untitled') %}
+{% include 'head.html' %}
+<body>
+    <div class="container">
+        {% include 'header.html' %}
+
+        <div class="article-detail-image-container">
+            {% if article.image_url %}
+                <a href="{{ article.url }}" target="_blank" title="View Original Article">
+                    <img src="{{ article.image_url }}"
+                         alt="Image for {{ title }}"
+                         class="article-detail-image"
+                         onerror="this.parentElement.style.display='none'; document.getElementById('detail-placeholder').style.display='flex';">
+                </a>
+                <div id="detail-placeholder" class="article-image-placeholder article-detail-placeholder" style="display: none;">
+                     <i class="fas fa-image"></i> No Image Available
+                 </div>
+            {% else %}
+                 <div class="article-image-placeholder article-detail-placeholder">
+                     <i class="fas fa-image"></i> No Image Available
+                 </div>
+            {% endif %}
+        </div>
+
+        <h2>Article Details</h2>
+
+        <dl class="article-details">
+            <dt>Title</dt>
+            <dd>{{ title }}</dd>
+
+            <dt>Impact Score</dt>
+            <dd>
+                {% if article.impact_score is not none %}
+                    <span class="impact-score score-{{ article.impact_score }}" style="display: inline-block; margin-right: 5px;">
+                        {{ article.impact_score }}
+                    </span> / 10
+                {% else %}
+                    <span class="impact-score score-unknown" style="display: inline-block; margin-right: 5px;">-</span> (Not Rated)
+                {% endif %}
+            </dd>
+
+            <dt>AI Summary (Processed Content)</dt>
+            <dd class="content-block summary-content">
+                {% if article.processed_content_html %}
+                    {{ article.processed_content_html | safe }}
+                {% else %}
+                    <em>Not Processed / Summarized Yet</em>
+                {% endif %}
+            </dd>
+
+            <dt>Original URL</dt>
+            <dd><a href="{{ article['url'] }}" target="_blank">{{ article['url'] }}</a></dd>
+
+            <dt>Source Feed</dt>
+            <dd>{{ article['feed_source'] | default('N/A') }}</dd>
+
+            <dt>Published Date</dt>
+            <dd>{{ article['published_date'] | datetimeformat | default('N/A') }}</dd>
+
+            <dt>Fetched Date</dt>
+            <dd>{{ article['fetched_at'] | datetimeformat | default('N/A') }}</dd>
+
+            <dt>Processed Date</dt>
+            <dd>{{ article['processed_at'] | datetimeformat | default('N/A') }}</dd>
+
+            <dt>Embedding Status</dt>
+            <dd>{{ embedding_status }}</dd>
+
+            <dt>Cluster ID</dt>
+            <dd>{{ article['cluster_id'] if article['cluster_id'] is not none else 'Not Clustered' }}</dd>
+
+            <dt class="collapsible-header">
+                Raw Extracted Content
+                <span class="toggle-icon-container" onclick="toggleRawContent()" title="Toggle Raw Content Visibility">
+                    <i class="fas fa-eye" id="eye-icon"></i>
+                    <i class="fas fa-eye-slash" id="eye-slash-icon" style="display: none;"></i>
+                </span>
+            </dt>
+            <dd id="raw-content-container" class="content-block raw-content" style="display: none;">
+                {% if article.raw_content %}
+                    <pre>{{ article.raw_content }}</pre>
+                {% else %}
+                    <em>Raw content not available or failed to extract.</em>
+                {% endif %}
+            </dd>
+        </dl>
+
+    </div>
+    <script>
+        function toggleRawContent() {
+            var content = document.getElementById('raw-content-container');
+            var eyeIcon = document.getElementById('eye-icon');
+            var eyeSlashIcon = document.getElementById('eye-slash-icon');
+
+            if (content.style.display === 'none' || content.style.display === '') {
+                content.style.display = 'block';
+                eyeIcon.style.display = 'none';
+                eyeSlashIcon.style.display = 'inline-block';
+            } else {
+                content.style.display = 'none';
+                eyeIcon.style.display = 'inline-block';
+                eyeSlashIcon.style.display = 'none';
+            }
+        }
+    </script>
+
+</body>
+</html>

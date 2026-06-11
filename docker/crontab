@@ -1,0 +1,4 @@
+# Daily intelligence brief at 06:00 UTC.
+# --all runs every stage in order: scrape -> process (summarize+embed) -> rate -> generate.
+# Lookback for the brief is 24h (config_base.BRIEFING_ARTICLE_LOOKBACK_HOURS).
+0 6 * * * cd /app && .venv/bin/python -m meridiano.run_briefing --feed default --all

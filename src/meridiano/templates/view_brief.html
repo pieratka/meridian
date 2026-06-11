@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+{% set title = "Briefing - " ~ generation_time %}
+{% include 'head.html' %}
+<body>
+    <div class="container">
+        {% include 'header.html' %}
+
+        <h2>Intelligence Brief</h2>
+        <p class="timestamp">Generated: {{ generation_time }} (ID: {{ brief_id }})</p>
+        <hr>
+        <div class="brief-content">
+            {{ brief_content|safe }}
+        </div>
+    </div>
+</body>
+</html>

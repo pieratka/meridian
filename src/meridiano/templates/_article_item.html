@@ -1,0 +1,44 @@
+<li class="article-item">
+    <div class="article-image-container">
+        {% if article.image_url %}
+            <img src="{{ article.image_url }}"
+                alt="Image for {{ article.title }}"
+                class="article-image"
+                loading="lazy"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        {% else %}
+            <div class="article-image-placeholder">
+                <i class="fas fa-image"></i> No Image
+            </div>
+        {% endif %}
+    </div>
+    <div class="article-text-content">
+        <span class="profile-badge list-badge">{{ article.feed_profile }}</span>
+        {% if article.impact_score is not none %}
+            <span class="impact-score score-{{ article.impact_score }}"
+                  title="Impact Score: {{ article.impact_score }}/10">
+                {{ article.impact_score }}
+            </span>
+        {% else %}
+            <span class="impact-score score-unknown" title="Impact Score: Not Rated">-</span>
+        {% endif %}
+        <div class="article-link-wrapper">
+          <a href="{{ url_for('view_article', article_id=article['id']) }}"
+             class="article-link">{{ article['title'] | default("Untitled Article") }}</a>
+          <a href="{{ article['url'] }}" class="article-link-original" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link" title="Original Article"></i>
+          </a>
+          <span class="collections-control" style="margin-left:10px; position: relative;">
+          <span id="collections-toggle-{{ article['id'] }}" class="collections-button" onclick="toggleCollectionsMenu(event, 'collections-menu-{{ article['id'] }}')" title="Add to Collection">
+            <i class="fas fa-folder-plus"></i>
+          </span>
+          <div id="collections-menu-{{ article['id'] }}" class="collections-menu" style="display:none; position:absolute; right:0; background:#fff; border:1px solid #ddd; padding:8px; z-index:1000; min-width:220px;">
+            <div class="collections-menu-content"></div>
+          </div>
+        </div>
+        <span class="article-meta">
+          ({{ article['feed_source'] | default("Unknown Source") }} / {{ article['published_date'] | datetimeformat }})
+        </span>
+        <div class="article-summary-list">{{ article['processed_content_html'] | safe }}</div>
+    </div>
+</li>

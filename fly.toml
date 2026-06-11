@@ -1,0 +1,35 @@
+# Fly.io config for the consolidated Meridiano app (single machine: web + daily brief cron).
+# `fly launch` may rename the app / pick a region; adjust as needed.
+app = "meridiano"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "docker/Dockerfile"
+
+[env]
+  # SQLite on the mounted volume (see [mounts]).
+  DATABASE_URL = "sqlite:////data/meridian.db"
+  FLASK_ENV = "production"
+
+# Persistent volume holding the SQLite database. Create with:
+#   fly volumes create data --size 1
+[[mounts]]
+  source = "data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 5000
+  force_https = true
+  # Must stay up: the cron runs in this machine and it owns the SQLite volume.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 50
+    hard_limit = 100
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

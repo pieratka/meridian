@@ -1,0 +1,927 @@
+/* simple-meridian/static/style.css */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; /* Common system font stack */
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    color: #212529; /* Slightly darker text */
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 25px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+}
+
+/* --- Header Styling --- */
+.main-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    padding: 10px 0;
+    margin-bottom: 25px; /* Space below header */
+}
+
+.header-content {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #495057;
+    text-decoration: none;
+}
+.logo:hover {
+    color: #0056b3;
+}
+
+.main-nav {
+    display: flex;
+    gap: 25px;
+    flex-grow: 1; /* Pushes actions to the right */
+    margin-left: 40px;
+}
+
+.main-nav a {
+    text-decoration: none;
+    color: #495057;
+    font-size: 1.0em;
+    padding: 5px 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+    color: #0056b3;
+    border-bottom-color: #007bff;
+}
+
+.main-nav a.active {
+    font-weight: 600; /* Bolder text for active link */
+}
+
+.header-actions {
+    /* Container for buttons or user info */
+}
+/* --- End Header Styling --- */
+
+
+h1 {
+    color: #343a40; /* Darker heading */
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-top: 0;
+    font-size: 1.8em;
+}
+
+h2 {
+    color: #495057;
+    margin-top: 1.5em;
+}
+
+h3 {
+    color: #495057;
+    margin-top: 1.2em;
+}
+
+.timestamp {
+    color: #6c757d;
+    font-size: 0.9em;
+    margin-bottom: 15px;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 20px 0;
+}
+
+.brief-content {
+    margin-top: 20px;
+}
+
+/* --- Article List Styling --- */
+.article-list {
+    list-style-type: none; /* Remove default bullets */
+    padding-left: 0;
+    margin-top: 20px;
+}
+
+.article-item {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f1f1; /* Light separator */
+}
+.article-item:last-child {
+    border-bottom: none;
+}
+
+.article-link-wrapper {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.article-link, .article-link-original {
+    display: inline;
+    text-decoration: none;
+    color: #0056b3; /* Slightly darker blue for links */
+    font-weight: 500; /* Slightly bolder titles */
+}
+.article-link:hover, .article-link-original:hover {
+    text-decoration: underline;
+    color: #003d80;
+}
+
+.article-meta {
+    font-size: 0.85em;
+    color: #6c757d; /* Gray for metadata */
+    display: block; /* Put metadata on new line */
+}
+/* --- End Article List Styling --- */
+
+/* --- Article List Image Styling --- */
+.article-item {
+    display: flex; /* Use flexbox for layout */
+    align-items: flex-start; /* Align items to the top */
+    gap: 15px; /* Space between image and text */
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f1f1;
+}
+.article-item:last-child { border-bottom: none; }
+
+.article-image-container {
+    flex-shrink: 0; /* Prevent image container from shrinking */
+    width: 100px; /* Fixed width for image/placeholder */
+    height: 75px; /* Fixed height */
+    overflow: hidden; /* Hide parts of image that don't fit */
+    border-radius: 4px;
+    background-color: #f0f0f0; /* BG for container while image loads */
+}
+
+.article-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover the area, cropping if needed */
+    border-radius: 4px;
+}
+
+.article-image-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: #e9ecef; /* Grey background */
+    color: #6c757d; /* Muted text color */
+    font-size: 0.8em;
+    text-align: center;
+    border-radius: 4px;
+    box-sizing: border-box; /* Include padding/border in element's total width/height */
+    border: 1px dashed #ced4da; /* Optional dashed border */
+}
+
+.placeholder-icon {
+    width: 24px; /* Adjust icon size */
+    height: 24px;
+    margin-bottom: 4px;
+    opacity: 0.6;
+}
+
+.article-text-content {
+    flex-grow: 1; /* Allow text content to take remaining space */
+    /* No specific styles needed unless required */
+}
+/* --- End Article List Image Styling --- */
+
+
+/* --- Article Detail Image Styling --- */
+.article-detail-image-container {
+    margin-bottom: 25px; /* Space below image */
+    max-width: 400px; /* Limit max width on detail page */
+    margin-left: auto; /* Center the container */
+    margin-right: auto;
+}
+.article-detail-image {
+    display: block;
+    width: 100%;
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+.article-detail-placeholder {
+    height: 200px; /* Give placeholder a decent height */
+    font-size: 1em;
+}
+.article-detail-placeholder .placeholder-icon {
+    width: 40px;
+    height: 40px;
+}
+
+
+/* Basic styling for Markdown elements */
+p {
+    margin-bottom: 1em;
+}
+
+ul:not(.article-list), ol { /* Only apply margin to non-article lists */
+    margin-left: 20px;
+    margin-bottom: 1em;
+}
+
+li:not(.article-item) { /* Only apply margin to non-article list items */
+    margin-bottom: 0.5em;
+}
+
+strong, b {
+    font-weight: bold;
+    color: #495057;
+}
+
+em, i {
+    font-style: italic;
+}
+
+code {
+    background-color: #e9ecef;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9em;
+}
+
+pre {
+    background-color: #e9ecef;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-size: 0.9em;
+}
+
+pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+blockquote {
+    border-left: 4px solid #ccc;
+    padding-left: 15px;
+    margin-left: 0;
+    color: #555;
+    font-style: italic;
+}
+
+/* --- Pagination Styling --- */
+.pagination {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    text-align: center;
+    font-size: 0.95em;
+}
+
+.page-link {
+    display: inline-block;
+    padding: 8px 15px;
+    margin: 0 5px;
+    text-decoration: none;
+    color: #007bff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.page-link:hover {
+    background-color: #e9ecef;
+    color: #0056b3;
+    border-color: #ced4da;
+}
+
+.page-link.disabled {
+    color: #6c757d;
+    pointer-events: none; /* Make it non-clickable */
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.page-info {
+    display: inline-block;
+    padding: 8px 15px;
+    margin: 0 10px;
+    color: #495057;
+    font-weight: 500;
+}
+
+/* article page */
+.article-details dt {
+    font-weight: bold;
+    margin-top: 1em;
+    color: #343a40;
+}
+
+/* Style for the collapsible header (dt) */
+.collapsible-header {
+    display: flex;
+    justify-content: space-between; /* Puts text left, icon right */
+    align-items: center;
+}
+
+/* Style for the icon container */
+.toggle-icon-container {
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: #6c757d; /* Muted icon color */
+    display: inline-flex;
+    align-items: center;
+}
+.toggle-icon-container:hover {
+    background-color: #e9ecef;
+    color: #007bff; /* Highlight on hover */
+}
+
+/* Style for the SVG icons themselves */
+.toggle-icon-container svg {
+    width: 16px;
+    height: 16px;
+}
+
+.article-details dd {
+    margin-left: 0; /* Reset browser default indent */
+    margin-bottom: 0.8em;
+    color: #495057;
+    padding-left: 1em; /* Add our own indent */
+    border-left: 3px solid #e9ecef; /* Subtle left border */
+}
+
+.article-details dd a { /* Style link within details */
+    color: #0056b3;
+    text-decoration: none;
+}
+.article-details dd a:hover {
+    text-decoration: underline;
+}
+
+.content-block { /* Common style for summary/raw */
+    background-color: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    font-size: 0.95em;
+    line-height: 1.5;
+    margin-top: 5px; /* Space from the <dt> */
+}
+
+.content-block.raw-content pre {
+    white-space: pre-wrap;       /* CSS3 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    max-height: 400px; /* Limit height */
+    overflow-y: auto; /* Add scrollbar if needed */
+    margin: 0; /* Reset default pre margin */
+    background-color: transparent; /* Inherit from parent */
+    padding: 0; /* Reset default pre padding */
+    border: none; /* Reset default pre border */
+    font-size: 0.9em; /* Slightly smaller for dense text */
+}
+
+/* --- Impact Score Styling --- */
+.impact-score {
+    display: inline-block; /* Changed from inline to inline-block for padding/margin */
+    padding: 3px 8px;
+    font-size: 0.8em;
+    font-weight: bold;
+    border-radius: 10px; /* Rounded corners */
+    color: #fff; /* Default white text */
+    margin-right: 8px; /* Space between badge and title */
+    min-width: 1.5em; /* Ensure single digits have decent width */
+    text-align: center;
+    vertical-align: middle; /* Align better with text */
+    line-height: 1.2; /* Adjust line height for padding */
+}
+
+/* Default / Unknown */
+.impact-score.score-unknown { background-color: #adb5bd; color: #fff;} /* Grey */
+
+/* Color Scale (Example - adjust colors as desired) */
+.impact-score.score-1, .impact-score.score-2 { background-color: #28a745; } /* Green */
+.impact-score.score-3, .impact-score.score-4 { background-color: #198754; } /* Darker Green */
+.impact-score.score-5, .impact-score.score-6 { background-color: #ffc107; color: #333; } /* Yellow (darker text) */
+.impact-score.score-7, .impact-score.score-8 { background-color: #fd7e14; } /* Orange */
+.impact-score.score-9, .impact-score.score-10 { background-color: #dc3545; } /* Red */
+
+/* Adjust positioning slightly on the article list item */
+.article-item .impact-score {
+    /* Optional: Tweak alignment if needed */
+    position: relative;
+    top: -1px;
+}
+
+.filter-sort-form {
+    display: flex;
+    flex-direction: column; /* Stack sections vertically */
+    gap: 10px; /* Space between sections */
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+}
+
+.form-section {
+    /* Base styles for sections within the form if needed */
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping */
+    gap: 15px; /* Space between profile and search */
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+/* --- Search Filter Styling --- */
+.search-filter {
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Allow search to take more space */
+    background-color: #fff; /* White background */
+    border: 1px solid #ced4da;
+    border-radius: 20px; /* Rounded corners */
+    padding: 0px 5px 0px 12px; /* Padding left for text, less right for button */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.search-filter input[type="search"] {
+    border: none;
+    outline: none;
+    padding: 8px 5px;
+    font-size: 0.95em;
+    flex-grow: 1; /* Input takes available space */
+    background: transparent;
+    min-width: 150px; /* Minimum width */
+}
+/* Hide browser's default cancel button */
+.search-filter input[type="search"]::-webkit-search-cancel-button,
+.search-filter input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+
+.btn-search {
+    background: none;
+    border: none;
+    padding: 5px 8px;
+    cursor: pointer;
+    color: #6c757d;
+}
+.btn-search:hover {
+    color: #007bff;
+}
+.btn-search svg { /* Style embedded SVG */
+    display: block; /* Remove extra space below SVG */
+    width: 18px;
+    height: 18px;
+}
+
+.btn-clear-search {
+    background: none;
+    border: none;
+    color: #adb5bd;
+    font-size: 1.4em;
+    line-height: 1;
+    padding: 0 8px;
+    cursor: pointer;
+    text-decoration: none;
+    margin-left: 4px; /* Space from search button */
+}
+.btn-clear-search:hover {
+    color: #dc3545; /* Red on hover */
+}
+
+/* --- Collapsible Date Filter Styling --- */
+.date-filter-toggle {
+    background-color: transparent;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 5px 0;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 10px;
+}
+.date-filter-toggle:hover {
+    text-decoration: underline;
+}
+.toggle-icon {
+    display: inline-block;
+    margin-left: 5px;
+    font-weight: bold;
+    width: 1em; /* Fixed width */
+    text-align: center;
+}
+
+.date-filter-content {
+    /* display: none; */ /* Set inline style initially */
+    padding: 15px;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    background-color: #fff; /* White background inside */
+    margin-top: -10px; /* Pull up slightly */
+    display: flex; /* Use flex for layout inside */
+    flex-direction: column;
+    gap: 15px; /* Space between date inputs and presets */
+}
+
+/* Ensure date inputs and presets display nicely within collapsible */
+.date-filter-content .date-inputs,
+.date-filter-content .preset-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-controls {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 15px; /* Space between sections */
+    align-items: center;
+}
+
+.date-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between label, input, button */
+    flex-grow: 1; /* Allow date inputs to take available space */
+}
+
+.date-inputs label {
+    font-size: 0.9em;
+    color: #495057;
+}
+
+.date-inputs input[type="date"] {
+    padding: 5px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.preset-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap; /* Allow buttons to wrap */
+}
+
+/* General Button Styling */
+.btn {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.9em;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    margin: 0.5em 0 0.5em 0;
+}
+
+.btn-filter {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+.btn-filter:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.btn-clear {
+    color: #6c757d;
+    background-color: transparent;
+    border: 1px solid #6c757d;
+}
+.btn-clear:hover {
+    color: #fff;
+    background-color: #6c757d;
+}
+
+.btn-preset {
+    color: #007bff;
+    background-color: #e7f1ff; /* Light blue background */
+    border: 1px solid #b8d6ff;
+}
+.btn-preset:hover {
+    background-color: #cde2ff;
+    border-color: #99c3ff;
+}
+.btn-preset.active {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+    font-weight: bold;
+}
+
+/* --- End Filter Controls Styling --- */
+
+/* --- Sorting Controls Styling (adjust if needed) --- */
+.sort-controls {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    font-size: 0.9em;
+    color: #6c757d;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+/* --- Sorting Controls Styling --- */
+
+.sort-link {
+    text-decoration: none;
+    color: #007bff; /* Link blue */
+    margin-left: 15px;
+    padding: 3px 5px;
+    border-radius: 3px;
+}
+
+.sort-link:hover {
+    background-color: #e9ecef;
+    text-decoration: none;
+}
+
+.sort-link.active {
+    font-weight: bold;
+    color: #0056b3; /* Darker blue for active */
+    background-color: #d6eaff; /* Light blue background for active */
+}
+
+.sort-indicator {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 0.8em; /* Make indicator slightly smaller */
+    color: #343a40; /* Dark color for indicator */
+}
+
+/* --- Feed Profile Filter & Badge Styling --- */
+.profile-filter {
+    margin-bottom: 15px;
+    padding-bottom: 0;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.profile-filter.form-section select { /* Style the select dropdown */
+    padding: 5px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9em;
+    margin-left: 5px;
+}
+.profile-filter.form-section label {
+     font-size: 0.9em;
+    color: #495057;
+}
+
+.profile-link {
+    text-decoration: none;
+    color: #007bff;
+    margin-left: 10px;
+    padding: 3px 6px;
+    border-radius: 3px;
+}
+.profile-link:hover {
+    background-color: #e9ecef;
+    text-decoration: none;
+}
+.profile-link.active {
+    font-weight: bold;
+    color: #fff;
+    background-color: #6c757d; /* Grey background for active profile */
+}
+
+.profile-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    font-size: 0.8em;
+    font-weight: 500;
+    border-radius: 4px;
+    background-color: #6c757d; /* Default grey */
+    color: #fff;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+.profile-badge.list-badge { /* Smaller badge on list items */
+    font-size: 0.7em;
+    padding: 1px 5px;
+    margin-right: 5px; /* Space before impact score */
+    margin-left: 0;
+}
+
+.relevance-notice {
+    font-weight: bold;
+    color: #17a2b8; /* Teal color or similar */
+    font-size: 0.9em;
+}
+
+.sort-link-disabled {
+    color: #adb5bd; /* Lighter grey for disabled */
+    text-decoration: none;
+    margin-left: 5px;
+    cursor: default;
+}
+
+/* --- Flash Message Styling --- */
+.flash-messages {
+    margin-bottom: 15px;
+}
+.flash {
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+.flash-success { color: #0f5132; background-color: #d1e7dd; border-color: #badbcc; }
+.flash-error   { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
+.flash-warning { color: #664d03; background-color: #fff3cd; border-color: #ffecb5; }
+.flash-info    { color: #055160; background-color: #cff4fc; border-color: #b6effb; } /* For general info */
+
+/* --- Add Article Form Styling --- */
+.add-article-form {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+.form-group label {
+    display: block;
+    margin-bottom: .5rem;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+.form-control {
+    display: block;
+    width: 100%;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    appearance: none; /* For select */
+    border-radius: .25rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+.form-control:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 .25rem rgba(13,110,253,.25);
+}
+.form-text {
+    display: block;
+    margin-top: .25rem;
+    font-size: .8em;
+    color: #6c757d;
+}
+.btn-primary { /* For the submit button */
+    color: #fff;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+.btn-primary:hover {
+    color: #fff;
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.btn-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 1.1rem;
+    color: #6c757d; /* Muted color */
+    transition: color 0.15s ease-in-out;
+    vertical-align: middle; /* Better alignment with text */
+}
+
+.btn-delete:hover {
+    color: #dc3545; /* Red on hover */
+}
+
+/* --- Header Action Button Styling --- */
+.btn-add-article {
+    color: #198754; /* Green text */
+    background-color: #e8f3ed; /* Light green background */
+    border: 1px solid #a3d0b9;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px; /* Space between icon and text */
+    margin: 0; /* Override any margin from .btn */
+}
+
+.btn-add-article:visited {
+    color: #198754;
+}
+
+.btn-add-article:hover {
+    color: #fff;
+    background-color: #198754; /* Solid green on hover */
+    border-color: #198754;
+}
+
+/* --- Collections Dropdown Menu --- */
+.collections-menu {
+    border-radius: 6px;
+}
+
+.collections-menu-content {
+    font-size: 0.9em; /* Smaller font */
+}
+
+.collection-entry {
+    display: flex;
+    justify-content: space-between; /* Aligns name left, button right */
+    align-items: center;
+    padding: 4px 0;
+}
+
+.collections-list-container {
+    max-height: 150px; /* Limit height */
+    overflow-y: auto; /* Add scrollbar if content overflows */
+    margin-bottom: 8px; /* Space above footer */
+}
+
+.collections-menu-footer {
+    border-top: 1px solid #eee; /* Separator line */
+    padding-top: 8px;
+    text-align: right; /* Align link to the right */
+}
+.collections-menu-footer a {
+    text-decoration: none;
+    color: #0056b3;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px; /* Space between icon and text */
+}
+.collections-menu-footer a:hover {
+    text-decoration: underline;
+}
+
+.collection-action-button .btn {
+    margin: 0; /* Override default button margin */
+    padding: 2px 6px; /* Smaller padding for icon buttons */
+    line-height: 1; /* Tighter line height */
+}
+
+.collections-button {
+    color: #6c757d;
+    cursor: pointer;
+}
+
+.collections-button :hover {
+    color: #0056b3;
+}
+
+.collection-article-count {
+    font-weight: 400; /* Normal weight */
+    font-size: 0.9em;
+    color: #6c757d; /* Muted text color */
+    margin-left: 5px;
+}

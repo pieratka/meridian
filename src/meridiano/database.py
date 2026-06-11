@@ -1,0 +1,520 @@
+"""
+Database operations using SQLModel for the Meridiano application.
+This replaces the SQLite-based database.py with modern SQLModel operations.
+"""
+
+import json
+import logging
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import and_, asc, desc, func, or_, select
+
+from . import config_base as config
+from .models import Article, Brief, Collection, CollectionArticle, get_session
+from .models import init_db as model_init_db
+
+logger = logging.getLogger(__name__)
+
+ARTICLES_PER_PAGE_DEFAULT = 25
+
+
+def get_db_connection():
+    """Returns a new database session (replaces SQLite connection)"""
+    return get_session()
+
+
+def init_db():
+    """Initialize the database - create all tables"""
+
+    model_init_db()
+
+
+def get_unrated_articles(feed_profile: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Gets processed articles that haven't been rated yet."""
+    with get_session() as session:
+        statement = (
+            select(Article)
+            .where(
+                and_(
+                    Article.processed_content.is_not(None),
+                    Article.processed_content != "",
+                    Article.processed_at.is_not(None),
+                    Article.impact_score.is_(None),
+                    Article.feed_profile == feed_profile,
+                )
+            )
+            .order_by(desc(Article.processed_at))
+            .limit(limit)
+        )
+
+        articles = session.exec(statement).all()
+        return [_article_to_dict(article) for article in articles]
+
+
+def update_article_rating(article_id: int, impact_score: int) -> None:
+    """Updates an article with its impact score."""
+    with get_session() as session:
+        statement = select(Article).where(Article.id == article_id)
+        article = session.exec(statement).first()
+        if article:
+            article.impact_score = impact_score
+            session.add(article)
+            session.commit()
+
+
+def get_article_by_id(article_id: int) -> Optional[Dict[str, Any]]:
+    """Retrieves all data for a specific article by its ID."""
+    with get_session() as session:
+        statement = select(Article).where(Article.id == article_id)
+        article = session.exec(statement).first()
+        return _article_to_dict(article) if article else None
+
+
+def _article_to_dict(article: Article) -> Dict[str, Any]:
+    """Convert Article model to dictionary for compatibility with existing code."""
+    if not article:
+        return None
+
+    return article.model_dump(
+        include={
+            "id",
+            "url",
+            "title",
+            "published_date",
+            "feed_source",
+            "fetched_at",
+            "raw_content",
+            "processed_content",
+            "embedding",
+            "processed_at",
+            "cluster_id",
+            "impact_score",
+            "image_url",
+            "feed_profile",
+        }
+    )
+
+
+def _brief_to_dict(brief: Brief) -> Dict[str, Any]:
+    """Convert Brief model to dictionary for compatibility with existing code."""
+    if not brief:
+        return None
+
+    return brief.model_dump(
+        include={
+            "id",
+            "generated_at",
+            "brief_markdown",
+            "contributing_article_ids",
+            "feed_profile",
+        }
+    )
+
+
+def _build_article_filters(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    feed_profile: Optional[str] = None,
+):
+    """Helper for building filter conditions for articles."""
+    filters = []
+
+    if start_date:
+        filters.append(func.date(Article.published_date) >= func.date(start_date))
+    if end_date:
+        filters.append(func.date(Article.published_date) <= func.date(end_date))
+    if feed_profile:
+        filters.append(Article.feed_profile == feed_profile)
+
+    return filters
+
+
+def get_all_articles(
+    page: int = 1,
+    per_page: int = ARTICLES_PER_PAGE_DEFAULT,
+    sort_by: str = "published_date",
+    direction: str = "desc",
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    feed_profile: Optional[str] = None,
+    search_term: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Fetches articles with filtering, sorting, and full-text search.
+    Uses PostgreSQL full-text search when available, falls back to LIKE search.
+    """
+    with get_session() as session:
+        # Start with base query
+        statement = select(Article)
+
+        # Apply basic filters
+        filters = _build_article_filters(start_date, end_date, feed_profile)
+        if filters:
+            statement = statement.where(and_(*filters))
+
+        # Apply search if provided
+        if search_term:
+            if "postgresql" in config.DATABASE_URL.lower():
+                # PostgreSQL full-text search
+                search_vector = func.to_tsvector(
+                    "english",
+                    func.coalesce(Article.title, "") + " " + func.coalesce(Article.raw_content, ""),
+                )
+                # Use SQLAlchemy's match with a plain string and specify the Postgres
+                # text search configuration to avoid nesting plainto_tsquery calls.
+                statement = statement.where(search_vector.match(search_term, postgresql_regconfig="english"))
+            else:
+                # Fallback to LIKE search for SQLite
+                search_filter = or_(
+                    Article.title.ilike(f"%{search_term}%"),
+                    Article.raw_content.ilike(f"%{search_term}%"),
+                )
+                statement = statement.where(search_filter)
+
+        # Apply sorting
+        sort_columns = {
+            "published_date": Article.published_date,
+            "impact_score": Article.impact_score,
+            "fetched_at": Article.fetched_at,
+        }
+
+        sort_column = sort_columns.get(sort_by, Article.published_date)
+        if direction.lower() == "asc":
+            statement = statement.order_by(asc(sort_column), desc(Article.id))
+        else:
+            statement = statement.order_by(desc(sort_column), desc(Article.id))
+
+        # Apply pagination
+        offset = (page - 1) * per_page
+        statement = statement.offset(offset).limit(per_page)
+
+        articles = session.exec(statement).all()
+        return [_article_to_dict(article) for article in articles]
+
+
+def get_total_article_count(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    feed_profile: Optional[str] = None,
+    search_term: Optional[str] = None,
+) -> int:
+    """Returns total count of articles with optional filtering and search."""
+    with get_session() as session:
+        # Start with base query
+        statement = select(func.count(Article.id))
+
+        # Apply basic filters
+        filters = _build_article_filters(start_date, end_date, feed_profile)
+        if filters:
+            statement = statement.where(and_(*filters))
+
+        # Apply search if provided
+        if search_term:
+            if "postgresql" in config.DATABASE_URL.lower():
+                # PostgreSQL full-text search
+                search_vector = func.to_tsvector(
+                    "english",
+                    func.coalesce(Article.title, "") + " " + func.coalesce(Article.raw_content, ""),
+                )
+                # Use SQLAlchemy's match with a plain string and specify the Postgres
+                # text search configuration to avoid nesting plainto_tsquery calls.
+                statement = statement.where(search_vector.match(search_term, postgresql_regconfig="english"))
+            else:
+                # Fallback to LIKE search
+                search_filter = or_(
+                    Article.title.ilike(f"%{search_term}%"),
+                    Article.raw_content.ilike(f"%{search_term}%"),
+                )
+                statement = statement.where(search_filter)
+
+        return session.exec(statement).one()
+
+
+def add_article(
+    url: str,
+    title: str,
+    published_date: datetime,
+    feed_source: str,
+    raw_content: str,
+    feed_profile: str,
+    image_url: Optional[str] = None,
+) -> Optional[int]:
+    """Adds a new article with optional image URL."""
+    with get_session() as session:
+        try:
+            # Ensure Postgres sequence is in sync to avoid duplicate primary key errors
+            if "postgresql" in config.DATABASE_URL.lower():
+                try:
+                    # Sync the sequence to the current max(id) so nextval() will produce a fresh value.
+                    session.exec(
+                        text(
+                            "SELECT setval("
+                            "pg_get_serial_sequence('articles','id'), "
+                            "COALESCE((SELECT MAX(id) FROM articles), 1))"
+                        )
+                    )
+                except Exception as e:
+                    # Log warning but continue - this is usually non-critical for new inserts
+                    logger.warning(f"PostgreSQL sequence sync warning (non-critical): {e}")
+                    # Continue - this is usually fine for new inserts
+
+            article = Article(
+                url=url,
+                title=title,
+                published_date=published_date,
+                feed_source=feed_source,
+                raw_content=raw_content,
+                image_url=image_url,
+                feed_profile=feed_profile,
+                fetched_at=datetime.now(),
+            )
+            session.add(article)
+            session.commit()
+            session.refresh(article)  # Get the ID
+            print(f"Added article [{feed_profile}]: {title}")
+            return article.id
+        except IntegrityError:
+            session.rollback()
+            return None
+
+
+def get_unprocessed_articles(feed_profile: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Gets articles that haven't been processed yet."""
+    with get_session() as session:
+        statement = (
+            select(Article)
+            .where(
+                and_(
+                    Article.processed_at.is_(None),
+                    Article.raw_content.is_not(None),
+                    Article.raw_content != "",
+                    Article.feed_profile == feed_profile,
+                )
+            )
+            .order_by(desc(Article.fetched_at))
+            .limit(limit)
+        )
+
+        articles = session.exec(statement).all()
+        return [_article_to_dict(article) for article in articles]
+
+
+def update_article_processing(article_id: int, processed_content: str, embedding: Optional[List[float]]) -> None:
+    """Updates an article with its summary, embedding, and processed timestamp."""
+    with get_session() as session:
+        statement = select(Article).where(Article.id == article_id)
+        article = session.exec(statement).first()
+        if article:
+            article.processed_content = processed_content
+            article.embedding = json.dumps(embedding) if embedding else None
+            article.processed_at = datetime.now()
+            session.add(article)
+            session.commit()
+
+
+def get_articles_for_briefing(lookback_hours: int, feed_profile: str) -> List[Dict[str, Any]]:
+    """Gets recently processed articles for a specific feed profile."""
+    cutoff_time = datetime.now() - timedelta(hours=lookback_hours)
+
+    with get_session() as session:
+        statement = (
+            select(Article)
+            .where(
+                and_(
+                    Article.processed_at >= cutoff_time,
+                    Article.embedding.is_not(None),
+                    Article.feed_profile == feed_profile,
+                )
+            )
+            .order_by(desc(Article.processed_at))
+        )
+
+        articles = session.exec(statement).all()
+        return [_article_to_dict(article) for article in articles]
+
+
+def save_brief(brief_markdown: str, contributing_article_ids: List[int], feed_profile: str) -> int:
+    """Saves the generated brief including its feed profile."""
+    with get_session() as session:
+        ids_json = json.dumps(contributing_article_ids)
+        brief = Brief(
+            brief_markdown=brief_markdown,
+            contributing_article_ids=ids_json,
+            feed_profile=feed_profile,
+            generated_at=datetime.now(),
+        )
+
+        # Guarantee unique and sequential id
+        if "postgresql" in config.DATABASE_URL.lower():
+            try:
+                session.exec(
+                    text(
+                        "SELECT setval("
+                        "pg_get_serial_sequence('briefs','id'), "
+                        "COALESCE((SELECT MAX(id) FROM briefs), 1))"
+                    )
+                )
+            except Exception:
+                pass
+
+        session.add(brief)
+        session.commit()
+        session.refresh(brief)  # Get the ID
+        print(f"Saved brief [{feed_profile}] with ID: {brief.id}")
+        return brief.id
+
+
+def get_all_briefs_metadata(
+    feed_profile: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Retrieves ID, timestamp, and profile for briefs, newest first, optionally filtered."""
+    with get_session() as session:
+        statement = select(Brief)
+
+        if feed_profile:
+            statement = statement.where(Brief.feed_profile == feed_profile)
+
+        statement = statement.order_by(desc(Brief.generated_at))
+        briefs = session.exec(statement).all()
+
+        return [_brief_to_dict(brief) for brief in briefs]
+
+
+def get_brief_by_id(brief_id: int) -> Optional[Dict[str, Any]]:
+    """Retrieves a specific brief's content and timestamp by its ID."""
+    with get_session() as session:
+        statement = select(Brief).where(Brief.id == brief_id)
+        brief = session.exec(statement).first()
+        return _brief_to_dict(brief) if brief else None
+
+
+def get_distinct_feed_profiles(table: str = "articles") -> List[str]:
+    """Gets a list of distinct feed_profile values from a table."""
+    if table not in ["articles", "briefs"]:
+        raise ValueError("Invalid table name for distinct profiles.")
+
+    with get_session() as session:
+        if table == "articles":
+            statement = select(Article.feed_profile).distinct().order_by(Article.feed_profile)
+            result = session.exec(statement).all()
+        else:  # table == 'briefs'
+            statement = select(Brief.feed_profile).distinct().order_by(Brief.feed_profile)
+            result = session.exec(statement).all()
+
+        return list(result)
+
+
+# -------------------------
+# Collections helpers
+# -------------------------
+def create_collection(name: str) -> int:
+    """Create a new collection and return its ID."""
+    with get_session() as session:
+        coll = Collection(name=name, created_at=datetime.now(), archived=False)
+        session.add(coll)
+        session.commit()
+        session.refresh(coll)
+        return coll.id
+
+
+def get_collections(archived: bool = False) -> List[Dict[str, Any]]:
+    """Return available collections (id, name, created_at), filtered by archived status."""
+    with get_session() as session:
+        stmt = select(Collection).where(Collection.archived == archived).order_by(asc(Collection.name))
+        cols = session.exec(stmt).all()
+        return [{"id": c.id, "name": c.name, "created_at": c.created_at, "archived": c.archived} for c in cols]
+
+
+def get_collection_by_id(collection_id: int) -> Optional[Dict[str, Any]]:
+    """Return collection metadata by id."""
+    with get_session() as session:
+        stmt = select(Collection).where(Collection.id == collection_id)
+        coll = session.exec(stmt).first()
+        if not coll:
+            return None
+        return {"id": coll.id, "name": coll.name, "created_at": coll.created_at, "archived": coll.archived}
+
+
+def toggle_collection_archive_status(collection_id: int) -> Optional[bool]:
+    """
+    Toggles the archived status of a collection.
+    Returns the new archived status, or None if collection not found.
+    """
+    with get_session() as session:
+        coll = session.get(Collection, collection_id)
+        if not coll:
+            return None
+
+        coll.archived = not coll.archived
+        session.add(coll)
+        session.commit()
+        session.refresh(coll)
+        return coll.archived
+
+
+def delete_collection(collection_id: int) -> None:
+    """Deletes a collection and all its article associations."""
+    with get_session() as session:
+        # First, delete associations
+        stmt_assoc = select(CollectionArticle).where(CollectionArticle.collection_id == collection_id)
+        assocs = session.exec(stmt_assoc).all()
+        for assoc in assocs:
+            session.delete(assoc)
+
+        # Then, delete the collection itself
+        coll = session.get(Collection, collection_id)
+        if coll:
+            session.delete(coll)
+
+        session.commit()
+
+
+def add_article_to_collection(collection_id: int, article_id: int) -> None:
+    """Associate an article with a collection (idempotent)."""
+    with get_session() as session:
+        # Check existence first
+        exists_stmt = select(CollectionArticle).where(
+            and_(CollectionArticle.collection_id == collection_id, CollectionArticle.article_id == article_id)
+        )
+        existing = session.exec(exists_stmt).first()
+        if existing:
+            return
+
+        assoc = CollectionArticle(collection_id=collection_id, article_id=article_id)
+        session.add(assoc)
+        session.commit()
+
+
+def remove_article_from_collection(collection_id: int, article_id: int) -> None:
+    """Remove association between an article and a collection."""
+    with get_session() as session:
+        stmt = select(CollectionArticle).where(
+            and_(CollectionArticle.collection_id == collection_id, CollectionArticle.article_id == article_id)
+        )
+        assoc = session.exec(stmt).first()
+        if assoc:
+            session.delete(assoc)
+            session.commit()
+
+
+def get_articles_for_collection(collection_id: int) -> List[Dict[str, Any]]:
+    """Return article dicts for all articles in a collection ordered by fetched_at desc."""
+    with get_session() as session:
+        stmt = (
+            select(Article)
+            .join(CollectionArticle, Article.id == CollectionArticle.article_id)
+            .where(CollectionArticle.collection_id == collection_id)
+            .order_by(desc(Article.fetched_at))
+        )
+        articles = session.exec(stmt).all()
+        return [_article_to_dict(article) for article in articles]
+
+
+def get_article_count_for_collection(collection_id: int) -> int:
+    """Return the count of articles in a specific collection using a count query."""
+    with get_session() as session:
+        stmt = select(func.count(CollectionArticle.article_id)).where(CollectionArticle.collection_id == collection_id)
+        return session.exec(stmt).one()
