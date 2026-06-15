@@ -3,15 +3,61 @@
 {% set title = "Briefing - " ~ generation_time %}
 {% include 'head.html' %}
 <body>
-    <div class="container">
+    <div class="container container-wide">
         {% include 'header.html' %}
 
-        <h2>Intelligence Brief</h2>
-        <p class="timestamp">Generated: {{ generation_time }} (ID: {{ brief_id }})</p>
-        <hr>
-        <div class="brief-content">
-            {{ brief_content|safe }}
+        <div class="brief-layout">
+            {% if '<a' in brief_toc %}
+            <aside class="brief-toc">
+                <div class="brief-toc-title">On this page</div>
+                {{ brief_toc|safe }}
+            </aside>
+            {% endif %}
+
+            <div class="brief-main">
+                <h2>Intelligence Brief</h2>
+                <p class="timestamp">Generated: {{ generation_time }} (ID: {{ brief_id }})</p>
+                <hr>
+                <div class="brief-content">
+                    {{ brief_content|safe }}
+                </div>
+            </div>
         </div>
     </div>
+
+    <script>
+    (function () {
+        var toc = document.querySelector('.brief-toc');
+        if (!toc) return;
+        var links = {};
+        toc.querySelectorAll('a[href^="#"]').forEach(function (a) {
+            links[decodeURIComponent(a.getAttribute('href').slice(1))] = a;
+        });
+        var headings = document.querySelectorAll('.brief-content h2[id], .brief-content h3[id]');
+        if (!headings.length) return;
+
+        function setActive(id) {
+            for (var k in links) links[k].classList.remove('active');
+            if (links[id]) links[id].classList.add('active');
+        }
+
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) { if (e.isIntersecting) setActive(e.target.id); });
+        }, { rootMargin: '0px 0px -75% 0px', threshold: 0 });
+        headings.forEach(function (h) { observer.observe(h); });
+
+        // Smooth-scroll on click
+        toc.querySelectorAll('a[href^="#"]').forEach(function (a) {
+            a.addEventListener('click', function (ev) {
+                var target = document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1)));
+                if (target) {
+                    ev.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    history.replaceState(null, '', a.getAttribute('href'));
+                }
+            });
+        });
+    })();
+    </script>
 </body>
 </html>

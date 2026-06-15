@@ -59,13 +59,17 @@ def view_brief(brief_id):
     if brief_data is None:
         abort(404)  # Return a 404 error if brief not found
 
-    brief_content_html = Markup(markdown.markdown(brief_data["brief_markdown"], extensions=["fenced_code"]))
+    # `toc` adds id anchors to headings and builds an "on this page" table of contents.
+    md = markdown.Markdown(extensions=["fenced_code", "toc"], extension_configs={"toc": {"toc_depth": "2-3"}})
+    brief_content_html = Markup(md.convert(brief_data["brief_markdown"]))
+    brief_toc_html = Markup(md.toc)
     generation_time = format_datetime(brief_data["generated_at"], "%Y-%m-%d %H:%M:%S UTC")
 
     return render_template(
         "view_brief.html",  # Use a new template for viewing
         brief_id=brief_data["id"],
         brief_content=brief_content_html,
+        brief_toc=brief_toc_html,
         generation_time=generation_time,
     )
 
