@@ -1,6 +1,6 @@
 # Fly.io config for the consolidated Meridiano app (single machine: web + daily brief cron).
 # `fly launch` may rename the app / pick a region; adjust as needed.
-app = "meridiano"
+app = "meridiano-pierre"
 primary_region = "cdg"
 
 [build]
@@ -10,6 +10,12 @@ primary_region = "cdg"
   # SQLite on the mounted volume (see [mounts]).
   DATABASE_URL = "sqlite:////data/meridian.db"
   FLASK_ENV = "production"
+  # Gemini via liteLLM (GEMINI_API_KEY is a secret). Without these the app falls
+  # back to meridiano's Deepseek/Together defaults.
+  LLM_CHAT_MODEL = "gemini/gemini-2.5-flash-lite"
+  EMBEDDING_MODEL = "gemini/gemini-embedding-001"
+  # Cron runs in this timezone (so the daily brief stays at 09:30 Paris across DST).
+  TZ = "Europe/Paris"
 
 # Persistent volume holding the SQLite database. Create with:
 #   fly volumes create data --size 1
@@ -32,4 +38,4 @@ primary_region = "cdg"
 
 [[vm]]
   size = "shared-cpu-1x"
-  memory = "512mb"
+  memory = "1024mb"

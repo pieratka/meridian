@@ -9,4 +9,4 @@ set -euo pipefail
 /usr/local/bin/supercronic /app/docker/crontab &
 
 # Start the web UI in the foreground. If gunicorn exits, the Fly machine restarts.
-exec .venv/bin/gunicorn --bind 0.0.0.0:5000 --workers 2 --timeout 180 meridiano.app:app
+exec .venv/bin/gunicorn --bind 0.0.0.0:5000 --workers 1 --timeout 180 meridiano.app:app

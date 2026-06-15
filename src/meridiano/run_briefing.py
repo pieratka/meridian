@@ -236,7 +236,7 @@ def process_articles(feed_profile, effective_config, limit=1000):
         database.update_article_processing(article["id"], summary, embedding)
         processed_count += 1
         print(f"Successfully processed article ID: {article['id']}")
-        time.sleep(1)  # Avoid hitting API rate limits
+        time.sleep(0.3)  # Small inter-call delay; retry/backoff handles real rate limits
 
     print(f"--- Processing Finished. Processed {processed_count} articles. ---")
 
@@ -308,7 +308,7 @@ def rate_articles(feed_profile, effective_config, limit=1000):
         # database.update_article_rating(article['id'], -1) # Example: Mark as failed with -1? Or leave NULL?
         # Leaving NULL for now.
 
-        time.sleep(1)  # API rate limiting
+        time.sleep(0.3)  # API rate limiting
 
     print(f"--- Rating Finished. Rated {rated_count} articles. ---")
 

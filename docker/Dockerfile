@@ -1,5 +1,9 @@
 FROM python:3.13-slim-bookworm
 
+# tzdata so the cron can run in Europe/Paris (TZ set in fly.toml)
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
 # uv for fast, reproducible installs
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
