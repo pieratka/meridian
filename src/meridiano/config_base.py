@@ -34,27 +34,48 @@ Summary:
 Output ONLY the integer number representing your rating (1-10).
 """
 
-# Used in generate_brief (can be overridden per profile)
+# Persona used as the system prompt for the final brief synthesis call.
+BRIEF_SYSTEM_PROMPT = """
+You are an exceptionally well-informed, analytical intelligence briefer. You read between the lines, connect
+related events, and contextualize them with quiet authority. You are precise, concrete, and objective — never
+sensational, never speculative beyond what the evidence supports. You write clear, substantive prose for a
+sharp reader who wants depth without filler.
+"""
+
+# Used in generate_brief (per cluster). Produces a substantive analytical paragraph.
 PROMPT_CLUSTER_ANALYSIS = """
-These are summaries of potentially related news articles from a '{feed_profile}' context:
+You are an intelligence analyst examining a cluster of related news articles from a '{feed_profile}' news mix.
 
 {cluster_summaries_text}
 
-What is the core event or topic discussed? Summarize the key developments and significance in 3-5 sentences
-based *only* on the provided text. If the articles seem unrelated, state that clearly.
+Write a tight analytical paragraph (4-7 sentences) covering:
+- the core event or development,
+- the key facts and how it is unfolding,
+- why it matters — context, drivers, and likely implications.
+Base it ONLY on the provided text. Be specific and concrete (names, places, numbers). Neutral, analytical tone.
+If the articles are genuinely unrelated, say so briefly and summarize the dominant one.
 """
 
-# Used in generate_brief (can be overridden per profile)
+# Used in generate_brief (final synthesis). Produces the long-form, sectioned brief.
 PROMPT_BRIEF_SYNTHESIS = """
-You are an AI assistant writing a Presidential-style daily intelligence briefing using Markdown,
-specifically for the '{feed_profile}' category.
-Synthesize the following analyzed news clusters into a coherent, high-level executive summary.
-Start with the 2-3 most critical overarching themes globally or within this category based *only* on these inputs.
-Then, provide concise bullet points summarizing key developments within the most significant clusters
-(roughly 3-5 clusters).
-Maintain an objective, analytical tone relevant to the '{feed_profile}' context. Avoid speculation.
+Write today's intelligence brief in Markdown from the analyzed story clusters below.
 
-Analyzed News Clusters (Most significant first):
+Use these section headings (omit a section only if there is genuinely nothing for it):
+## What matters now  — the 3-5 highest-impact stories, each a substantive paragraph, most important first
+## Global landscape  — other significant world / geopolitical / economic developments
+## France  — developments concerning France (politics, society, economy)
+## Crypto & markets  — cryptocurrency and market developments
+## Tech & science  — technology, AI, and science developments
+## Noteworthy  — smaller but interesting items, briefly
+
+Rules:
+- Cover EVERY significant cluster below. Do NOT drop the France or crypto stories — give them their own
+  sections even if globally smaller.
+- One flowing analytical paragraph per story (not bullet fragments). Lead each with a **bold headline**.
+- Ground everything in the provided analyses; do not invent facts, sources, or dates. Do NOT add a dateline.
+- Measured, analytical voice. Aim for roughly 1500-3000 words.
+
+Analyzed story clusters (highest impact first):
 {cluster_analyses_text}
 """
 
@@ -65,12 +86,15 @@ BRIEFING_ARTICLE_LOOKBACK_HOURS = 24
 # --- Model Settings ---
 # Model for summarization and analysis (check Deepseek docs for latest models)
 LLM_CHAT_MODEL = os.getenv("LLM_CHAT_MODEL", "deepseek/deepseek-chat")
+# Stronger model used only for the final brief synthesis (1 call/run); the bulk
+# per-article work stays on the cheap/fast LLM_CHAT_MODEL.
+SYNTHESIS_MODEL = os.getenv("SYNTHESIS_MODEL", "gemini/gemini-2.5-flash")
 # Model for embeddings
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "together_ai/intfloat/multilingual-e5-large-instruct")
 
-# Approximate number of clusters to aim for. Fine-tune based on results.
-# Alternatively, use algorithms like DBSCAN that don't require specifying k.
-N_CLUSTERS = 10  # Example, adjust as needed
+# Approximate number of clusters to aim for. Higher = finer topic separation so
+# smaller threads (France, crypto) form their own clusters instead of being absorbed.
+N_CLUSTERS = 16
 
 # Minimum number of articles required to attempt clustering/briefing
 MIN_ARTICLES_FOR_BRIEFING = 5

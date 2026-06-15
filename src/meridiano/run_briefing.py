@@ -32,7 +32,7 @@ embedding_client = {
 }
 
 
-def call_deepseek_chat(prompt, model=config.LLM_CHAT_MODEL, system_prompt=None):
+def call_deepseek_chat(prompt, model=config.LLM_CHAT_MODEL, system_prompt=None, max_tokens=2048):
     """Calls the LLM API (Deepseek, Ollama, etc)."""
     messages = []
     if system_prompt:
@@ -43,7 +43,9 @@ def call_deepseek_chat(prompt, model=config.LLM_CHAT_MODEL, system_prompt=None):
     completion_kwargs = {
         "model": model,
         "messages": messages,
-        "max_tokens": 2048,
+        # Thinking models (e.g. gemini-2.5-flash) spend part of this budget on hidden
+        # reasoning tokens, so long-form calls must pass a generous max_tokens.
+        "max_tokens": max_tokens,
         "temperature": 0.7,
     }
 
@@ -333,15 +335,19 @@ def generate_brief(feed_profile, effective_config):
     # Prepare data for clustering
     article_ids = [a["id"] for a in articles]
     summaries = [a["processed_content"] for a in articles]
+    raw_contents = [a.get("raw_content") or "" for a in articles]
+    impact_scores = [a.get("impact_score") or 0 for a in articles]
     embeddings = [json.loads(a["embedding"]) for a in articles if a["embedding"]]  # Load JSON string
 
     if len(embeddings) != len(articles):
         print("Warning: Some articles selected for briefing are missing embeddings. Proceeding with available ones.")
-        # Filter articles, summaries, ids to match embeddings
+        # Filter parallel lists to match the articles that have embeddings
         valid_indices = [i for i, a in enumerate(articles) if a["embedding"]]
         articles = [articles[i] for i in valid_indices]
         article_ids = [article_ids[i] for i in valid_indices]
         summaries = [summaries[i] for i in valid_indices]
+        raw_contents = [raw_contents[i] for i in valid_indices]
+        impact_scores = [impact_scores[i] for i in valid_indices]
         # embeddings are already filtered
 
     if len(embeddings) < config.MIN_ARTICLES_FOR_BRIEFING:
@@ -387,53 +393,69 @@ def generate_brief(feed_profile, effective_config):
         if len(cluster_indices) == 0:
             continue  # Skip empty clusters
 
-        cluster_summaries = [summaries[idx] for idx in cluster_indices]
-        print(f"  Analyzing Cluster {i} ({len(cluster_summaries)} articles)")
+        print(f"  Analyzing Cluster {i} ({len(cluster_indices)} articles)")
 
-        MAX_SUMMARIES_PER_CLUSTER = 10  # Consider making this configurable too?
-        cluster_summaries_text = "\n\n".join([f"- {s}" for s in cluster_summaries[:MAX_SUMMARIES_PER_CLUSTER]])
+        MAX_ARTICLES_PER_CLUSTER = 15
+        # Feed fuller text (summary + a slice of raw article content) for depth.
+        parts = []
+        for idx in cluster_indices[:MAX_ARTICLES_PER_CLUSTER]:
+            text = summaries[idx] or ""
+            raw = (raw_contents[idx] or "").strip()
+            if raw:
+                text += "\n" + raw[:1500]
+            parts.append(f"- {text}")
+        cluster_summaries_text = "\n\n".join(parts)
 
-        # *** Format the chosen prompt template ***
+        # Aggregate impact for ordering (sum rewards both per-article impact and cluster size).
+        cluster_impact = sum(impact_scores[idx] for idx in cluster_indices)
+
         analysis_prompt = cluster_analysis_prompt_template.format(
             cluster_summaries_text=cluster_summaries_text, feed_profile=feed_profile
         )
-
-        # *** Call LLM with the formatted prompt ***
-        # System prompt could also be configurable
         cluster_analysis = call_deepseek_chat(analysis_prompt, model=chat_model)
 
         if cluster_analysis:
-            # (Consider adding more robust filtering of non-analysis responses)
-            if "unrelated" not in cluster_analysis.lower() or len(cluster_summaries) > 2:
+            if "unrelated" not in cluster_analysis.lower() or len(cluster_indices) > 2:
                 cluster_analyses.append(
-                    {"topic": f"Cluster {i + 1}", "analysis": cluster_analysis, "size": len(cluster_summaries)}
+                    {
+                        "topic": f"Cluster {i + 1}",
+                        "analysis": cluster_analysis,
+                        "size": len(cluster_indices),
+                        "impact": cluster_impact,
+                    }
                 )
-        time.sleep(1)  # Rate limiting
+        time.sleep(0.3)  # Rate limiting
     # --- End Analyze each cluster ---
 
     if not cluster_analyses:
         print("No meaningful clusters found or analyzed.")
         return
 
-    # Sort clusters by size (number of articles) to prioritize major themes
-    cluster_analyses.sort(key=lambda x: x["size"], reverse=True)
+    # Order by aggregate impact so the brief leads with what matters most.
+    cluster_analyses.sort(key=lambda x: x["impact"], reverse=True)
 
-    # Synthesize Final Brief using profile-specific or default prompt
     brief_synthesis_prompt_template = getattr(
         effective_config, "PROMPT_BRIEF_SYNTHESIS", config.PROMPT_BRIEF_SYNTHESIS
-    )  # Fallback
-    print(f"DEBUG: Using Brief Synthesis Prompt Template:\n'''{brief_synthesis_prompt_template[:100]}...'''")
+    )
+    synthesis_model = getattr(effective_config, "SYNTHESIS_MODEL", config.SYNTHESIS_MODEL)
+    brief_system_prompt = getattr(effective_config, "BRIEF_SYSTEM_PROMPT", config.BRIEF_SYSTEM_PROMPT)
 
+    # Pass ALL analyzed clusters (not just the top few) so smaller France/crypto threads survive.
     cluster_analyses_text = ""
-    for i, cluster in enumerate(cluster_analyses[:5]):
+    for i, cluster in enumerate(cluster_analyses):
         cluster_analyses_text += (
-            f"--- Cluster {i + 1} ({cluster['size']} articles) ---\nAnalysis: {cluster['analysis']}\n\n"
+            f"--- Story {i + 1} (impact {cluster['impact']}, {cluster['size']} articles) ---\n"
+            f"{cluster['analysis']}\n\n"
         )
 
     synthesis_prompt = brief_synthesis_prompt_template.format(
         cluster_analyses_text=cluster_analyses_text, feed_profile=feed_profile
     )
-    final_brief_md = call_deepseek_chat(synthesis_prompt, model=chat_model)
+    print(f"Synthesizing final brief with {synthesis_model} from {len(cluster_analyses)} stories...")
+    # Large budget: room for the model's thinking tokens plus the full ~1500-3000 word brief.
+    final_brief_md = call_deepseek_chat(
+        synthesis_prompt, model=synthesis_model, system_prompt=brief_system_prompt, max_tokens=16384
+    )
 
     if final_brief_md:
         database.save_brief(final_brief_md, article_ids, feed_profile)

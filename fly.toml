@@ -13,6 +13,7 @@ primary_region = "cdg"
   # Gemini via liteLLM (GEMINI_API_KEY is a secret). Without these the app falls
   # back to meridiano's Deepseek/Together defaults.
   LLM_CHAT_MODEL = "gemini/gemini-2.5-flash-lite"
+  SYNTHESIS_MODEL = "gemini/gemini-2.5-flash"
   EMBEDDING_MODEL = "gemini/gemini-embedding-001"
   # Cron runs in this timezone (so the daily brief stays at 09:30 Paris across DST).
   TZ = "Europe/Paris"
