@@ -5,4 +5,27 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome-all.min.css') }}">
     <script src="{{ url_for('static', filename='js/index.js') }}" defer></script>
+    <script>
+    // Apply the saved (or system) theme before paint to avoid a flash.
+    (function () {
+        try {
+            var t = localStorage.getItem('theme');
+            if (t !== 'dark' && t !== 'light') {
+                t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+        window.toggleTheme = function () {
+            var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            try { localStorage.setItem('theme', next); } catch (e) {}
+            var icon = document.getElementById('theme-toggle-icon');
+            if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        };
+        document.addEventListener('DOMContentLoaded', function () {
+            var icon = document.getElementById('theme-toggle-icon');
+            if (icon) icon.className = document.documentElement.getAttribute('data-theme') === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        });
+    })();
+    </script>
 </head>

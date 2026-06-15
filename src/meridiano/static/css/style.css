@@ -968,3 +968,97 @@ blockquote {
     color: #6c757d; /* Muted text color */
     margin-left: 5px;
 }
+
+/* --- Theme toggle button --- */
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    font-size: 1.05em;
+    padding: 6px 9px;
+    margin-right: 6px;
+    border-radius: 6px;
+    line-height: 1;
+    vertical-align: middle;
+}
+.theme-toggle:hover { color: #007bff; background-color: #e9ecef; }
+
+/* ===================== Dark mode ===================== */
+html[data-theme="dark"] body { background-color: #0f1115; color: #e4e6eb; }
+html[data-theme="dark"] .container { background-color: #1a1d23; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
+
+html[data-theme="dark"] .main-header { background-color: transparent; border-bottom-color: #2c313a; }
+html[data-theme="dark"] .logo { color: #e4e6eb; }
+html[data-theme="dark"] .logo:hover { color: #4dabf7; }
+html[data-theme="dark"] .main-nav a { color: #b8bdc4; }
+html[data-theme="dark"] .main-nav a:hover,
+html[data-theme="dark"] .main-nav a.active { color: #4dabf7; border-bottom-color: #4dabf7; }
+
+html[data-theme="dark"] h1 { color: #f0f2f5; border-bottom-color: #2c313a; }
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3 { color: #e9ebee; }
+html[data-theme="dark"] strong,
+html[data-theme="dark"] b { color: #f0f2f5; }
+html[data-theme="dark"] hr { border-top-color: #2c313a; }
+html[data-theme="dark"] .timestamp,
+html[data-theme="dark"] .article-meta,
+html[data-theme="dark"] .form-text,
+html[data-theme="dark"] .sort-controls,
+html[data-theme="dark"] .profile-filter,
+html[data-theme="dark"] .date-inputs label,
+html[data-theme="dark"] .profile-filter.form-section label { color: #9aa0a8; }
+
+/* brief TOC */
+html[data-theme="dark"] .brief-toc a { color: #b8bdc4; }
+html[data-theme="dark"] .brief-toc a::after { color: #5c636b; }
+html[data-theme="dark"] .brief-toc a:hover { background-color: #23272f; color: #ffffff; }
+html[data-theme="dark"] .brief-toc a.active { background-color: #23272f; color: #4dabf7; border-left-color: #4dabf7; }
+
+/* links */
+html[data-theme="dark"] a,
+html[data-theme="dark"] .article-link,
+html[data-theme="dark"] .article-link-original,
+html[data-theme="dark"] .sort-link,
+html[data-theme="dark"] .profile-link,
+html[data-theme="dark"] .page-link,
+html[data-theme="dark"] .collections-menu-footer a,
+html[data-theme="dark"] .article-details dd a { color: #4dabf7; }
+html[data-theme="dark"] .article-link:hover,
+html[data-theme="dark"] .article-link-original:hover { color: #74c0fc; }
+
+/* code / pre / blockquote */
+html[data-theme="dark"] code,
+html[data-theme="dark"] pre { background-color: #23272f; color: #e4e6eb; }
+html[data-theme="dark"] blockquote { border-left-color: #3a3f48; color: #adb5bd; }
+
+/* article list + surfaces */
+html[data-theme="dark"] .article-item { border-bottom-color: #2c313a; }
+html[data-theme="dark"] .article-image-container,
+html[data-theme="dark"] .article-image-placeholder { background-color: #23272f; color: #9aa0a8; border-color: #3a3f48; }
+html[data-theme="dark"] .content-block,
+html[data-theme="dark"] .filter-sort-form,
+html[data-theme="dark"] .add-article-form,
+html[data-theme="dark"] .date-filter-content,
+html[data-theme="dark"] .search-filter { background-color: #23272f; border-color: #2c313a; color: #e4e6eb; }
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .date-inputs input[type="date"],
+html[data-theme="dark"] .profile-filter.form-section select { background-color: #23272f; border-color: #3a3f48; color: #e4e6eb; }
+html[data-theme="dark"] .search-filter input[type="search"] { color: #e4e6eb; }
+html[data-theme="dark"] .form-row { border-bottom-color: #2c313a; }
+html[data-theme="dark"] .article-details dt { color: #e9ebee; }
+html[data-theme="dark"] .article-details dd { color: #cdd0d5; border-left-color: #2c313a; }
+
+/* pagination / sort / profile states */
+html[data-theme="dark"] .page-link { border-color: #2c313a; }
+html[data-theme="dark"] .page-link:hover,
+html[data-theme="dark"] .sort-link:hover,
+html[data-theme="dark"] .profile-link:hover { background-color: #23272f; }
+html[data-theme="dark"] .page-link.disabled { background-color: #1a1d23; color: #6c757d; border-color: #2c313a; }
+html[data-theme="dark"] .sort-link.active { background-color: #20364d; color: #74c0fc; }
+html[data-theme="dark"] .collections-menu-footer { border-top-color: #2c313a; }
+
+/* theme toggle */
+html[data-theme="dark"] .theme-toggle { color: #9aa0a8; }
+html[data-theme="dark"] .theme-toggle:hover { color: #4dabf7; background-color: #23272f; }
+/* ===================== End dark mode ===================== */

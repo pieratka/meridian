@@ -11,6 +11,9 @@
             <a href="{{ url_for('collections', **profile_params) }}" class="{{ 'active' if request.endpoint in ['collections', 'view_collection'] else '' }}">Collections</a>
         </nav>
         <div class="header-actions">
+            <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <i id="theme-toggle-icon" class="fas fa-moon"></i>
+            </button>
             <a href="{{ url_for('add_manual_article') }}" class="btn btn-add-article" title="Add New Article">
                 <i class="fas fa-plus"></i> Add Article
             </a>
