@@ -91,6 +91,25 @@ Brief:
 {brief}
 """
 
+# Used in generate_brief to produce a one-sentence "standfirst" summary shown under the title.
+PROMPT_BRIEF_STANDFIRST = """
+Below is today's intelligence brief. Write a single sentence (about 20-35 words) that summarizes the most
+important threads of the day — a "standfirst" that sits under the headline. Concrete and specific, no date,
+no markdown, no quotation marks.
+
+Output ONLY the sentence.
+
+Brief:
+{brief}
+"""
+
+# Used in generate_brief to translate the standfirst into French.
+PROMPT_TRANSLATE_STANDFIRST_FR = """
+Translate this sentence into natural, fluent French. Output ONLY the translated sentence, no quotation marks.
+
+{text}
+"""
+
 # Used in generate_brief to translate the finished English brief into French.
 PROMPT_TRANSLATE_FR = """
 Translate the following Markdown intelligence brief into natural, fluent French.

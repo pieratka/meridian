@@ -32,8 +32,11 @@
                             {{ brief['generated_at'] | datetimeformat('%Y-%m-%d') }}
                         {% endif %}
                     </a>
+                    {% if brief['display_standfirst'] %}
+                    <p class="brief-standfirst-list">{{ brief['display_standfirst'] }}</p>
+                    {% endif %}
                     <div class="brief-meta-line">
-                        <span class="brief-date">{{ brief['generated_at'] | datetimeformat('%d %b %Y, %H:%M') }}</span>
+                        <span class="brief-date">{{ brief['generated_at'] | briefdate(lang) }}</span>
                         <span class="profile-badge list-badge">{{ brief['feed_profile'] }}</span>
                         <span class="brief-meta">ID: {{ brief['id'] }}</span>
                     </div>

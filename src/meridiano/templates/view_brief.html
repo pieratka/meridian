@@ -16,6 +16,9 @@
 
             <div class="brief-main">
                 <h2>{{ brief_title if brief_title else ('Synthèse' if lang == 'fr' else 'Intelligence Brief') }}</h2>
+                {% if brief_standfirst %}
+                <p class="brief-standfirst">{{ brief_standfirst }}</p>
+                {% endif %}
                 <p class="timestamp">{{ 'Généré le' if lang == 'fr' else 'Generated:' }} {{ generation_time }} (ID: {{ brief_id }})</p>
                 <hr>
                 <div class="brief-content">

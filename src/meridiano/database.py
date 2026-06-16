@@ -109,6 +109,8 @@ def _brief_to_dict(brief: Brief) -> Dict[str, Any]:
             "generated_at",
             "title",
             "title_fr",
+            "standfirst",
+            "standfirst_fr",
             "brief_markdown",
             "brief_markdown_fr",
             "contributing_article_ids",
@@ -345,6 +347,8 @@ def save_brief(
     feed_profile: str,
     title: Optional[str] = None,
     title_fr: Optional[str] = None,
+    standfirst: Optional[str] = None,
+    standfirst_fr: Optional[str] = None,
     brief_markdown_fr: Optional[str] = None,
 ) -> int:
     """Saves the generated brief including its feed profile and optional title/translation."""
@@ -355,6 +359,8 @@ def save_brief(
             brief_markdown_fr=brief_markdown_fr,
             title=title,
             title_fr=title_fr,
+            standfirst=standfirst,
+            standfirst_fr=standfirst_fr,
             contributing_article_ids=ids_json,
             feed_profile=feed_profile,
             generated_at=datetime.now(),

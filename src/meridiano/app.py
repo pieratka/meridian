@@ -3,6 +3,7 @@
 import json
 import math
 import os
+import re
 from datetime import date, datetime, timedelta
 
 import markdown
@@ -52,6 +53,59 @@ def brief_title_for(brief, lang):
     return brief.get("title") or brief.get("title_fr")
 
 
+def brief_standfirst_for(brief, lang):
+    """Pick the best available standfirst for a brief in the given language, with fallbacks."""
+    if lang == "fr" and brief.get("standfirst_fr"):
+        return brief["standfirst_fr"]
+    return brief.get("standfirst") or brief.get("standfirst_fr")
+
+
+_FR_MONTHS = [
+    "janvier", "février", "mars", "avril", "mai", "juin",
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+]
+
+
+def format_brief_date(dt, lang="en", with_time=True):
+    """Human-friendly date with localized month names (e.g. '16 June 2026' / '16 juin 2026')."""
+    if isinstance(dt, str):
+        try:
+            dt = datetime.fromisoformat(dt)
+        except ValueError:
+            return dt
+    if lang == "fr":
+        s = f"{dt.day} {_FR_MONTHS[dt.month - 1]} {dt.year}"
+    else:
+        s = f"{dt.day} {dt:%B} {dt.year}"
+    if with_time:
+        s += f", {dt:%H:%M}"
+    return s
+
+
+# Promote each story's leading **bold headline** to a `###` sub-heading so the headlines
+# render on their own line AND appear in the brief's "On this page" table of contents.
+_STORY_LEAD_RE = re.compile(r"^\*\*(.+?)\*\*(?:\s+(.*))?$")
+
+
+def promote_story_headlines(md_text):
+    out = []
+    for line in md_text.split("\n"):
+        if not line.startswith("#"):
+            m = _STORY_LEAD_RE.match(line)
+            if m:
+                out.append(f"### {m.group(1).strip()}")
+                out.append("")
+                rest = (m.group(2) or "").strip()
+                if rest:
+                    out.append(rest)
+                continue
+        out.append(line)
+    return "\n".join(out)
+
+
+app.jinja_env.filters["briefdate"] = format_brief_date
+
+
 def process_artciles_content(articles_data):
     return [
         {
@@ -77,6 +131,7 @@ def index():
     lang = current_lang()
     for brief in briefs_metadata:
         brief["display_title"] = brief_title_for(brief, lang)
+        brief["display_standfirst"] = brief_standfirst_for(brief, lang)
 
     return render_template(
         "index.html",
@@ -103,15 +158,17 @@ def view_brief(brief_id):
 
     # `toc` adds id anchors to headings and builds an "on this page" table of contents.
     md = markdown.Markdown(extensions=["fenced_code", "toc"], extension_configs={"toc": {"toc_depth": "2-3"}})
-    brief_content_html = Markup(md.convert(brief_markdown))
+    brief_content_html = Markup(md.convert(promote_story_headlines(brief_markdown)))
     brief_toc_html = Markup(md.toc)
-    generation_time = format_datetime(brief_data["generated_at"], "%Y-%m-%d %H:%M:%S UTC")
+    generation_time = format_brief_date(brief_data["generated_at"], lang)
     brief_title = brief_title_for(brief_data, lang)
+    brief_standfirst = brief_standfirst_for(brief_data, lang)
 
     return render_template(
         "view_brief.html",  # Use a new template for viewing
         brief_id=brief_data["id"],
         brief_title=brief_title,
+        brief_standfirst=brief_standfirst,
         brief_content=brief_content_html,
         brief_toc=brief_toc_html,
         generation_time=generation_time,

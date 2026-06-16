@@ -75,6 +75,8 @@ class Brief(SQLModel, table=True):
     generated_at: datetime = Field(default_factory=datetime.now)
     title: Optional[str] = None  # Generated English headline
     title_fr: Optional[str] = None  # French headline
+    standfirst: Optional[str] = None  # One-sentence English summary
+    standfirst_fr: Optional[str] = None  # One-sentence French summary
     brief_markdown: str
     brief_markdown_fr: Optional[str] = None  # French translation of the brief
     contributing_article_ids: Optional[str] = None  # JSON string
@@ -133,6 +135,8 @@ def create_db_and_tables():
         for column, coltype in [
             ("title", "TEXT"),
             ("title_fr", "TEXT"),
+            ("standfirst", "TEXT"),
+            ("standfirst_fr", "TEXT"),
             ("brief_markdown_fr", "TEXT"),
         ]:
             try:
