@@ -2,25 +2,17 @@
 <header class="main-header">
     <div class="header-content">
         <a href="{{ url_for('index', **profile_params) }}" class="logo">
-            <img src="{{ url_for('static', filename='icons/icon.svg') }}" alt="Meridiano Icon" style="height: 1.2em; vertical-align: middle; margin-right: 8px;">
-            Meridiano
+            <img src="{{ url_for('static', filename='icons/icon.svg') }}" alt="Daily Presidential Brief Icon" style="height: 1.2em; vertical-align: middle; margin-right: 8px;">
+            Daily Presidential Brief
         </a>
-        <nav class="main-nav">
-            <a href="{{ url_for('index', **profile_params) }}" class="{{ 'active' if request.endpoint in ['index', 'view_brief'] else '' }}">Briefs</a>
-            <a href="{{ url_for('list_articles', **profile_params) }}" class="{{ 'active' if request.endpoint in ['list_articles', 'view_article', 'add_manual_article'] else '' }}">Articles</a>
-            <a href="{{ url_for('collections', **profile_params) }}" class="{{ 'active' if request.endpoint in ['collections', 'view_collection'] else '' }}">Collections</a>
-        </nav>
         <div class="header-actions">
+            <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <i id="theme-toggle-icon" class="fas fa-moon"></i>
+            </button>
             <div class="lang-toggle" role="group" aria-label="Language">
                 <a href="{{ url_for('set_lang', lang='en') }}" class="{{ 'active' if lang == 'en' else '' }}">EN</a>
                 <a href="{{ url_for('set_lang', lang='fr') }}" class="{{ 'active' if lang == 'fr' else '' }}">FR</a>
             </div>
-            <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
-                <i id="theme-toggle-icon" class="fas fa-moon"></i>
-            </button>
-            <a href="{{ url_for('add_manual_article') }}" class="btn btn-add-article" title="Add New Article">
-                <i class="fas fa-plus"></i> Add Article
-            </a>
         </div>
     </div>
 </header>
