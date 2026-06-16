@@ -152,6 +152,23 @@ hr {
 .brief-content {
     margin-top: 20px;
 }
+.brief-content p {
+    margin-bottom: 1.3em;
+}
+/* Each story leads with a bold headline inside its paragraph; promote that
+   leading bold to its own line so it reads as a sub-heading (improves scanning). */
+.brief-content p > strong:first-child {
+    display: block;
+    margin-bottom: 0.3em;
+    font-size: 1.08em;
+    line-height: 1.35;
+}
+/* Section headers (## ...) get a light rule so the brief's structure stands out. */
+.brief-content h2 {
+    margin-top: 1.9em;
+    padding-bottom: 0.25em;
+    border-bottom: 1px solid #e9ecef;
+}
 
 /* --- Article List Styling --- */
 .article-list {
@@ -1036,6 +1053,7 @@ html[data-theme="dark"] .main-nav a.active { color: #4dabf7; border-bottom-color
 html[data-theme="dark"] h1 { color: #f0f2f5; border-bottom-color: #2c313a; }
 html[data-theme="dark"] h2,
 html[data-theme="dark"] h3 { color: #e9ebee; }
+html[data-theme="dark"] .brief-content h2 { border-bottom-color: #2c313a; }
 html[data-theme="dark"] strong,
 html[data-theme="dark"] b { color: #f0f2f5; }
 html[data-theme="dark"] hr { border-top-color: #2c313a; }
