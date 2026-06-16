@@ -457,11 +457,94 @@ def generate_brief(feed_profile, effective_config):
         synthesis_prompt, model=synthesis_model, system_prompt=brief_system_prompt, max_tokens=16384
     )
 
-    if final_brief_md:
-        database.save_brief(final_brief_md, article_ids, feed_profile)
-        print(f"--- Brief Generation Finished Successfully [{feed_profile}] ---")
-    else:
+    if not final_brief_md:
         print(f"--- Brief Generation Failed [{feed_profile}]: Could not synthesize final brief. ---")
+        return
+
+    # Generate a concise headline (cheap call on the fast workhorse model).
+    title = None
+    title_prompt_template = getattr(effective_config, "PROMPT_BRIEF_TITLE", config.PROMPT_BRIEF_TITLE)
+    raw_title = call_deepseek_chat(
+        title_prompt_template.format(brief=final_brief_md[:6000]), model=chat_model, max_tokens=64
+    )
+    if raw_title:
+        # Strip stray quotes/markdown/trailing punctuation the model may add.
+        title = raw_title.strip().strip('"').strip("*").strip().rstrip(".").strip()
+    print(f"Brief title: {title}")
+
+    # Translate the brief and headline to French (everything is authored in English, then translated).
+    print("Translating brief to French...")
+    translate_template = getattr(effective_config, "PROMPT_TRANSLATE_FR", config.PROMPT_TRANSLATE_FR)
+    brief_markdown_fr = call_deepseek_chat(
+        translate_template.format(brief=final_brief_md), model=chat_model, max_tokens=16384
+    )
+    if not brief_markdown_fr:
+        print("Warning: French translation failed; the brief will fall back to English when FR is selected.")
+
+    title_fr = None
+    if title:
+        title_fr_template = getattr(effective_config, "PROMPT_TRANSLATE_TITLE_FR", config.PROMPT_TRANSLATE_TITLE_FR)
+        raw_title_fr = call_deepseek_chat(
+            title_fr_template.format(title=title), model=chat_model, max_tokens=64
+        )
+        if raw_title_fr:
+            title_fr = raw_title_fr.strip().strip('"').strip("*").strip().rstrip(".").strip()
+
+    database.save_brief(
+        final_brief_md,
+        article_ids,
+        feed_profile,
+        title=title,
+        title_fr=title_fr,
+        brief_markdown_fr=brief_markdown_fr,
+    )
+    print(f"--- Brief Generation Finished Successfully [{feed_profile}] ---")
+
+
+def backfill_translations(effective_config):
+    """Generate titles + French translations for existing briefs that lack them.
+
+    Idempotent: skips briefs that already have both a title and a French translation.
+    """
+    print("\n--- Backfilling brief titles + French translations ---")
+    chat_model = getattr(effective_config, "LLM_CHAT_MODEL", config.LLM_CHAT_MODEL)
+    title_template = getattr(effective_config, "PROMPT_BRIEF_TITLE", config.PROMPT_BRIEF_TITLE)
+    translate_template = getattr(effective_config, "PROMPT_TRANSLATE_FR", config.PROMPT_TRANSLATE_FR)
+    title_fr_template = getattr(effective_config, "PROMPT_TRANSLATE_TITLE_FR", config.PROMPT_TRANSLATE_TITLE_FR)
+
+    def _clean(text):
+        return text.strip().strip('"').strip("*").strip().rstrip(".").strip()
+
+    with get_session() as session:
+        from meridiano.models import Brief  # local import to keep module top tidy
+
+        briefs = session.exec(select(Brief)).all()
+        for b in briefs:
+            if b.title and b.brief_markdown_fr:
+                continue
+            print(f"Backfilling brief {b.id}...")
+            if not b.title:
+                raw_title = call_deepseek_chat(
+                    title_template.format(brief=b.brief_markdown[:6000]), model=chat_model, max_tokens=64
+                )
+                if raw_title:
+                    b.title = _clean(raw_title)
+            if not b.brief_markdown_fr:
+                fr = call_deepseek_chat(
+                    translate_template.format(brief=b.brief_markdown), model=chat_model, max_tokens=16384
+                )
+                if fr:
+                    b.brief_markdown_fr = fr
+            if b.title and not b.title_fr:
+                raw_title_fr = call_deepseek_chat(
+                    title_fr_template.format(title=b.title), model=chat_model, max_tokens=64
+                )
+                if raw_title_fr:
+                    b.title_fr = _clean(raw_title_fr)
+            session.add(b)
+            session.commit()
+            print(f"  title='{b.title}' | fr_len={len(b.brief_markdown_fr or '')}")
+    print("--- Backfill finished ---")
 
 
 # --- Main Execution ---
@@ -505,6 +588,12 @@ def main():
             'Run all stages sequentially (scrape, process, generate).\n'
             'This is the default behavior if no specific stage argument is given.'
         ),
+    )
+    parser.add_argument(
+        "--backfill-translations",
+        dest="backfill",
+        action="store_true",
+        help="Generate titles + French translations for existing briefs that lack them, then exit.",
     )
     parser.add_argument(
         '-m', '--model',
@@ -583,6 +672,11 @@ def main():
     print(f"\nMeridian Briefing Run [{feed_profile_name}] - {datetime.now()}")
     print("Initializing database...")
     database.init_db()  # Initialize DB regardless of stage run
+
+    if args.backfill:
+        backfill_translations(effective_config)
+        print(f"\nRun Finished [{feed_profile_name}] - {datetime.now()}")
+        return
 
     current_rss_feeds = getattr(effective_config, "RSS_FEEDS", None)
 

@@ -11,6 +11,10 @@
             <a href="{{ url_for('collections', **profile_params) }}" class="{{ 'active' if request.endpoint in ['collections', 'view_collection'] else '' }}">Collections</a>
         </nav>
         <div class="header-actions">
+            <div class="lang-toggle" role="group" aria-label="Language">
+                <a href="{{ url_for('set_lang', lang='en') }}" class="{{ 'active' if lang == 'en' else '' }}">EN</a>
+                <a href="{{ url_for('set_lang', lang='fr') }}" class="{{ 'active' if lang == 'fr' else '' }}">FR</a>
+            </div>
             <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
                 <i id="theme-toggle-icon" class="fas fa-moon"></i>
             </button>

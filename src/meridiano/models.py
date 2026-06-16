@@ -73,7 +73,10 @@ class Brief(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     generated_at: datetime = Field(default_factory=datetime.now)
+    title: Optional[str] = None  # Generated English headline
+    title_fr: Optional[str] = None  # French headline
     brief_markdown: str
+    brief_markdown_fr: Optional[str] = None  # French translation of the brief
     contributing_article_ids: Optional[str] = None  # JSON string
     feed_profile: str = Field(default="default", index=True)
 
@@ -124,6 +127,26 @@ def create_db_and_tables():
             except Exception as e:
                 print(f"Migration failed: {e}")
                 session.rollback()
+
+    # Simple migration logic for new 'briefs' columns (title, title_fr, brief_markdown_fr)
+    with Session(engine) as session:
+        for column, coltype in [
+            ("title", "TEXT"),
+            ("title_fr", "TEXT"),
+            ("brief_markdown_fr", "TEXT"),
+        ]:
+            try:
+                session.exec(text(f"SELECT {column} FROM briefs LIMIT 1"))
+            except Exception:
+                session.rollback()
+                print(f"Migrating 'briefs' table: Adding '{column}' column...")
+                try:
+                    session.exec(text(f"ALTER TABLE briefs ADD COLUMN {column} {coltype}"))
+                    session.commit()
+                    print("Migration successful.")
+                except Exception as e:
+                    print(f"Migration failed: {e}")
+                    session.rollback()
 
     # Old SQLite schema for reference (replaced by to_tsvector in PostgreSQL)
     """

@@ -9,14 +9,14 @@
         <div class="brief-layout">
             {% if '<a' in brief_toc %}
             <aside class="brief-toc">
-                <div class="brief-toc-title">On this page</div>
+                <div class="brief-toc-title">{{ 'Sur cette page' if lang == 'fr' else 'On this page' }}</div>
                 {{ brief_toc|safe }}
             </aside>
             {% endif %}
 
             <div class="brief-main">
-                <h2>Intelligence Brief</h2>
-                <p class="timestamp">Generated: {{ generation_time }} (ID: {{ brief_id }})</p>
+                <h2>{{ brief_title if brief_title else ('Synthèse' if lang == 'fr' else 'Intelligence Brief') }}</h2>
+                <p class="timestamp">{{ 'Généré le' if lang == 'fr' else 'Generated:' }} {{ generation_time }} (ID: {{ brief_id }})</p>
                 <hr>
                 <div class="brief-content">
                     {{ brief_content|safe }}

@@ -984,6 +984,44 @@ blockquote {
 }
 .theme-toggle:hover { color: #007bff; background-color: #e9ecef; }
 
+/* --- Language toggle --- */
+.lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+.lang-toggle a {
+    padding: 4px 9px;
+    font-size: 0.78em;
+    font-weight: 600;
+    color: #6c757d;
+    text-decoration: none;
+    line-height: 1.4;
+}
+.lang-toggle a:hover { background-color: #e9ecef; color: #007bff; }
+.lang-toggle a.active { background-color: #007bff; color: #fff; }
+
+/* --- Briefing list items --- */
+.brief-link {
+    font-size: 1.12em;
+    font-weight: 600;
+    text-decoration: none;
+}
+.brief-link:hover { text-decoration: underline; }
+.brief-meta-line {
+    margin-top: 3px;
+    font-size: 0.82em;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.brief-date { font-variant-numeric: tabular-nums; }
+
 /* ===================== Dark mode ===================== */
 html[data-theme="dark"] body { background-color: #0f1115; color: #e4e6eb; }
 html[data-theme="dark"] .container { background-color: #1a1d23; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
@@ -1061,4 +1099,13 @@ html[data-theme="dark"] .collections-menu-footer { border-top-color: #2c313a; }
 /* theme toggle */
 html[data-theme="dark"] .theme-toggle { color: #9aa0a8; }
 html[data-theme="dark"] .theme-toggle:hover { color: #4dabf7; background-color: #23272f; }
+
+/* language toggle */
+html[data-theme="dark"] .lang-toggle { border-color: #3a3f48; }
+html[data-theme="dark"] .lang-toggle a { color: #9aa0a8; }
+html[data-theme="dark"] .lang-toggle a:hover { background-color: #23272f; color: #4dabf7; }
+html[data-theme="dark"] .lang-toggle a.active { background-color: #20364d; color: #74c0fc; }
+
+/* briefing list */
+html[data-theme="dark"] .brief-meta-line { color: #9aa0a8; }
 /* ===================== End dark mode ===================== */

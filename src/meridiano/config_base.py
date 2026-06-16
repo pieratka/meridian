@@ -79,6 +79,38 @@ Analyzed story clusters (highest impact first):
 {cluster_analyses_text}
 """
 
+# Used in generate_brief to produce a short headline for the brief listing/title.
+PROMPT_BRIEF_TITLE = """
+Below is today's intelligence brief. Write a single concise headline (6-12 words) that captures the most
+important theme of the day. It should read like a sharp newsletter title — specific and concrete, no date,
+no quotation marks, no markdown, no trailing punctuation.
+
+Output ONLY the headline text.
+
+Brief:
+{brief}
+"""
+
+# Used in generate_brief to translate the finished English brief into French.
+PROMPT_TRANSLATE_FR = """
+Translate the following Markdown intelligence brief into natural, fluent French.
+Preserve the Markdown structure EXACTLY: keep every heading level (##, ###), bold markers (**), lists, and
+paragraph breaks identical — translate only the text. Use professional, journalistic French. Do not add,
+remove, or summarize any content, and do not add commentary.
+
+Output ONLY the translated Markdown.
+
+{brief}
+"""
+
+# Used in generate_brief to translate the headline into French.
+PROMPT_TRANSLATE_TITLE_FR = """
+Translate this news headline into natural French. Output ONLY the translated headline, no quotation marks,
+no trailing punctuation.
+
+{title}
+"""
+
 # --- Processing Settings ---
 # How many hours back to look for articles when generating a brief
 BRIEFING_ARTICLE_LOOKBACK_HOURS = 24

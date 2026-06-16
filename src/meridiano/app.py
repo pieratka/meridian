@@ -20,6 +20,37 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "a_default_secret_key_for_develop
 # Register the filter with Jinja
 app.jinja_env.filters["datetimeformat"] = format_datetime
 
+SUPPORTED_LANGS = ("en", "fr")
+
+
+def current_lang():
+    """Returns the UI language from the cookie, defaulting to English."""
+    lang = request.cookies.get("lang", "en")
+    return lang if lang in SUPPORTED_LANGS else "en"
+
+
+@app.context_processor
+def inject_lang():
+    """Make the current language available to all templates."""
+    return {"lang": current_lang()}
+
+
+@app.route("/set_lang/<lang>")
+def set_lang(lang):
+    """Persist the chosen UI language in a cookie, then return where the user came from."""
+    if lang not in SUPPORTED_LANGS:
+        lang = "en"
+    resp = redirect(request.referrer or url_for("index"))
+    resp.set_cookie("lang", lang, max_age=60 * 60 * 24 * 365, samesite="Lax")
+    return resp
+
+
+def brief_title_for(brief, lang):
+    """Pick the best available title for a brief in the given language, with fallbacks."""
+    if lang == "fr" and brief.get("title_fr"):
+        return brief["title_fr"]
+    return brief.get("title") or brief.get("title_fr")
+
 
 def process_artciles_content(articles_data):
     return [
@@ -43,6 +74,10 @@ def index():
     # Get profiles for dropdown
     available_profiles = database.get_distinct_feed_profiles(table="briefs")
 
+    lang = current_lang()
+    for brief in briefs_metadata:
+        brief["display_title"] = brief_title_for(brief, lang)
+
     return render_template(
         "index.html",
         briefs=briefs_metadata,
@@ -59,15 +94,24 @@ def view_brief(brief_id):
     if brief_data is None:
         abort(404)  # Return a 404 error if brief not found
 
+    lang = current_lang()
+    # Serve the chosen language, falling back to English for briefs generated before translation existed.
+    if lang == "fr" and brief_data.get("brief_markdown_fr"):
+        brief_markdown = brief_data["brief_markdown_fr"]
+    else:
+        brief_markdown = brief_data["brief_markdown"]
+
     # `toc` adds id anchors to headings and builds an "on this page" table of contents.
     md = markdown.Markdown(extensions=["fenced_code", "toc"], extension_configs={"toc": {"toc_depth": "2-3"}})
-    brief_content_html = Markup(md.convert(brief_data["brief_markdown"]))
+    brief_content_html = Markup(md.convert(brief_markdown))
     brief_toc_html = Markup(md.toc)
     generation_time = format_datetime(brief_data["generated_at"], "%Y-%m-%d %H:%M:%S UTC")
+    brief_title = brief_title_for(brief_data, lang)
 
     return render_template(
         "view_brief.html",  # Use a new template for viewing
         brief_id=brief_data["id"],
+        brief_title=brief_title,
         brief_content=brief_content_html,
         brief_toc=brief_toc_html,
         generation_time=generation_time,

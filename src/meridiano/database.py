@@ -107,7 +107,10 @@ def _brief_to_dict(brief: Brief) -> Dict[str, Any]:
         include={
             "id",
             "generated_at",
+            "title",
+            "title_fr",
             "brief_markdown",
+            "brief_markdown_fr",
             "contributing_article_ids",
             "feed_profile",
         }
@@ -336,12 +339,22 @@ def get_articles_for_briefing(lookback_hours: int, feed_profile: str) -> List[Di
         return [_article_to_dict(article) for article in articles]
 
 
-def save_brief(brief_markdown: str, contributing_article_ids: List[int], feed_profile: str) -> int:
-    """Saves the generated brief including its feed profile."""
+def save_brief(
+    brief_markdown: str,
+    contributing_article_ids: List[int],
+    feed_profile: str,
+    title: Optional[str] = None,
+    title_fr: Optional[str] = None,
+    brief_markdown_fr: Optional[str] = None,
+) -> int:
+    """Saves the generated brief including its feed profile and optional title/translation."""
     with get_session() as session:
         ids_json = json.dumps(contributing_article_ids)
         brief = Brief(
             brief_markdown=brief_markdown,
+            brief_markdown_fr=brief_markdown_fr,
+            title=title,
+            title_fr=title_fr,
             contributing_article_ids=ids_json,
             feed_profile=feed_profile,
             generated_at=datetime.now(),
