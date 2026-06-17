@@ -9,8 +9,14 @@ load_dotenv()
 
 # Used in process_articles (operates globally, so uses default)
 PROMPT_ARTICLE_SUMMARY = """
-Summarize the key points of this news article objectively in 2-4 sentences.
-Identify the main topics covered.
+Summarize the key points of this news article in 2-4 sentences.
+
+Be strictly factual and neutral:
+- Report only verifiable facts (who, what, where, when, numbers).
+- Attribute any opinion, judgement, prediction, or contested claim to whoever makes it
+  ("the government says", "critics argue") instead of stating it as fact.
+- Strip loaded, emotive, or editorialising language; use plain neutral wording.
+- Add no interpretation, spin, or framing that is not stated as fact in the article itself.
 
 Article:
 {article_content}
@@ -52,7 +58,13 @@ Write a tight analytical paragraph (4-7 sentences) covering:
 - the core event or development,
 - the key facts and how it is unfolding,
 - why it matters — context, drivers, and likely implications.
-Base it ONLY on the provided text. Be specific and concrete (names, places, numbers). Neutral, analytical tone.
+
+Stay factual and balanced:
+- Base it ONLY on the provided text. Be specific and concrete (names, places, numbers).
+- Lead with facts corroborated across several of these sources; weight them most.
+- Where the sources frame the story differently or disagree, note it and attribute each
+  side to who says it. Flag a claim carried by only one source as such rather than as settled fact.
+- Neutral, analytical tone — no editorialising or loaded language.
 If the articles are genuinely unrelated, say so briefly and summarize the dominant one.
 """
 
@@ -73,6 +85,8 @@ Rules:
   sections even if globally smaller.
 - One flowing analytical paragraph per story (not bullet fragments). Lead each with a **bold headline**.
 - Ground everything in the provided analyses; do not invent facts, sources, or dates. Do NOT add a dateline.
+- Stay factual and even-handed: attribute contested claims to who makes them and do not present any
+  single outlet's framing or opinion as settled fact.
 - Measured, analytical voice. Aim for roughly 1500-3000 words.
 
 Analyzed story clusters (highest impact first):
