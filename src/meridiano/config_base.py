@@ -83,11 +83,11 @@ Use these section headings (omit a section only if there is genuinely nothing fo
 Rules:
 - Cover EVERY significant cluster below. Do NOT drop the France or crypto stories — give them their own
   sections even if globally smaller.
-- One flowing analytical paragraph per story (not bullet fragments). Lead each with a **bold headline**.
+- One tight paragraph per story — 2-4 sentences, no padding or filler. Lead each with a **bold headline**.
 - Ground everything in the provided analyses; do not invent facts, sources, or dates. Do NOT add a dateline.
 - Stay factual and even-handed: attribute contested claims to who makes them and do not present any
   single outlet's framing or opinion as settled fact.
-- Measured, analytical voice. Aim for roughly 1500-3000 words.
+- Measured, analytical voice. Keep it crisp — aim for roughly 1000-1600 words total.
 
 Analyzed story clusters (highest impact first):
 {cluster_analyses_text}
