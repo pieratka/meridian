@@ -15,7 +15,6 @@ RSS_FEEDS = [
     "https://www.lemonde.fr/rss/une.xml",                        # Le Monde (center-left)
     "https://www.francetvinfo.fr/titres.rss",                    # France Info (public broadcaster)
     "https://www.france24.com/fr/rss",                           # France 24 (public, international — neutral anchor)
-    "https://www.la-croix.com/RSS",                              # La Croix (centrist)
     "https://www.lefigaro.fr/rss/figaro_actualites.xml",         # Le Figaro (center-right)
     # --- Crypto ecosystem ---
     "https://www.coindesk.com/arc/outboundfeeds/rss/",           # CoinDesk
