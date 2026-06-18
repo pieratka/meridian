@@ -18,7 +18,12 @@ from sqlmodel import select
 from meridiano import config_base as config  # Load base config first
 from meridiano import database
 from meridiano.models import Article, get_session
-from meridiano.utils import fetch_article_content_and_og_image
+from meridiano.utils import (
+    BROWSER_USER_AGENT,
+    fetch_article_content_and_og_image,
+    html_to_text,
+    is_low_quality_content,
+)
 
 # --- Setup ---
 load_dotenv()
@@ -120,7 +125,7 @@ def scrape_articles(feed_profile, rss_feeds):  # Added params
 
     for feed_url in rss_feeds:
         print(f"Fetching feed: {feed_url}")
-        feed = feedparser.parse(feed_url)
+        feed = feedparser.parse(feed_url, agent=BROWSER_USER_AGENT)
 
         if feed.bozo:
             print(f"Warning: Potential issue parsing feed {feed_url}: {feed.bozo_exception}")
@@ -176,9 +181,17 @@ def scrape_articles(feed_profile, rss_feeds):  # Added params
             og_image_url = fetch_result["og_image"]
             # --- End Fetch ---
 
-            if not raw_content:
-                print(f"  Skipping article, failed to extract main content: {title}")
-                continue
+            # Drop cookie-consent walls / paywall stubs (e.g. Mediapart serves a fixed cookie
+            # template for paywalled articles). Fall back to the RSS teaser, which is clean and
+            # real, before giving up entirely.
+            if is_low_quality_content(raw_content):
+                teaser = html_to_text(entry.get("summary") or entry.get("description") or "")
+                if teaser and not is_low_quality_content(teaser):
+                    print("  Scraped body was boilerplate/paywall; using RSS teaser instead.")
+                    raw_content = teaser
+                else:
+                    print(f"  Skipping article (boilerplate/paywall, no usable teaser): {title}")
+                    continue
 
             # --- 3. Determine Final Image URL and Save ---
             final_image_url = rss_image_url if rss_image_url else og_image_url
@@ -322,6 +335,13 @@ def generate_brief(feed_profile, effective_config):
 
     # Get articles *for this specific profile*
     articles = database.get_articles_for_briefing(config.BRIEFING_ARTICLE_LOOKBACK_HOURS, feed_profile)
+
+    # Safety net: drop any cookie/paywall boilerplate that was stored before the scrape-time
+    # filter existed (or slipped through), so it never reaches clustering or synthesis.
+    before = len(articles)
+    articles = [a for a in articles if not is_low_quality_content(a.get("raw_content") or "")]
+    if len(articles) < before:
+        print(f"Filtered out {before - len(articles)} low-quality (boilerplate/paywall) article(s).")
 
     if not articles or len(articles) < config.MIN_ARTICLES_FOR_BRIEFING:
         print(

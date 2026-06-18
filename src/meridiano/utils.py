@@ -12,6 +12,10 @@ logging.basicConfig(
 
 logger = logging.getLogger()
 
+# Some sites (e.g. Le Figaro) block feedparser's default User-Agent and silently return an empty
+# feed. Use a browser UA for both feed parsing and article fetching.
+BROWSER_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:137.0) Gecko/20100101 Firefox/137.0"
+
 
 # Helper function for date formatting (optional but nice)
 def format_datetime(value, format="%Y-%m-%d %H:%M"):
@@ -27,6 +31,59 @@ def format_datetime(value, format="%Y-%m-%d %H:%M"):
     return value
 
 
+# Minimum length (chars) below which extracted text is treated as a stub, not an article.
+MIN_ARTICLE_CHARS = 200
+
+# Phrases that mark a cookie-consent wall, paywall, or JS/subscription stub rather than real
+# article text. The "strong" markers essentially never occur in genuine news body copy, so we
+# match them anywhere; the "head" markers are checked only near the start to avoid false positives.
+_BOILERPLATE_STRONG = (
+    "cookies et technologies similaires",
+    "cookies and similar technologies",
+    "nous utilisons des cookies",
+    "we use cookies",
+    "gérer mes cookies",
+    "gérer vos préférences",
+)
+_BOILERPLATE_HEAD = (
+    "réservé aux abonné",
+    "article réservé",
+    "pour lire la suite",
+    "subscribe to read",
+    "subscribe to continue",
+    "create a free account",
+    "create an account to",
+    "enable javascript",
+    "activez javascript",
+    "veuillez activer javascript",
+    "accept all cookies",
+    "accepter les cookies",
+)
+
+
+def is_low_quality_content(text):
+    """True if extracted text looks like a cookie/consent wall, paywall, or stub rather than a
+    real article — so it can be dropped before it pollutes the brief (and wastes LLM calls)."""
+    if not text or len(text.strip()) < MIN_ARTICLE_CHARS:
+        return True
+    low = text.lower()
+    # Consent-wall phrases never appear in real news copy — match anywhere.
+    if any(m in low for m in _BOILERPLATE_STRONG):
+        return True
+    # Paywall taglines often get appended to a real lead, so only treat them as junk when the
+    # page *opens* with one (first ~200 chars); otherwise keep the real text before it.
+    if any(m in low[:200] for m in _BOILERPLATE_HEAD):
+        return True
+    return False
+
+
+def html_to_text(html):
+    """Strip HTML tags from an RSS summary/teaser, returning clean plain text."""
+    if not html:
+        return ""
+    return BeautifulSoup(html, "lxml").get_text(separator=" ", strip=True)
+
+
 def fetch_article_content_and_og_image(url):
     """
     Fetches HTML, extracts main content using Trafilatura,
@@ -39,7 +96,7 @@ def fetch_article_content_and_og_image(url):
     og_image = None
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:137.0) Gecko/20100101 Firefox/137.0",
+            "User-Agent": BROWSER_USER_AGENT,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.5",
             "Accept-Encoding": "gzip, deflate",
