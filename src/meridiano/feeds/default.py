@@ -9,6 +9,7 @@ RSS_FEEDS = [
     "https://feeds.npr.org/1001/rss.xml",                        # NPR
     "https://www.theguardian.com/world/rss",                     # Guardian World
     "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",    # NYT World
+    "https://www.ft.com/world?format=rss",                       # Financial Times World (teaser fallback; paywalled)
     # --- France & francophone (across the spectrum, no extremes) ---
     "https://www.mediapart.fr/articles/feed",                    # Mediapart (left, investigative)
     "https://www.liberation.fr/arc/outboundfeeds/rss/?outputType=xml",  # Libération (left)
