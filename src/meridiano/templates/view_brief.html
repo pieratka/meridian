@@ -32,16 +32,27 @@
     (function () {
         var toc = document.querySelector('.brief-toc');
         if (!toc) return;
+        var rootUl = toc.querySelector('ul');
+        var topLis = rootUl ? Array.prototype.filter.call(rootUl.children, function (n) { return n.tagName === 'LI'; }) : [];
         var links = {};
+        var sectionOf = {};   // heading id -> its top-level section <li>
         toc.querySelectorAll('a[href^="#"]').forEach(function (a) {
-            links[decodeURIComponent(a.getAttribute('href').slice(1))] = a;
+            var id = decodeURIComponent(a.getAttribute('href').slice(1));
+            links[id] = a;
+            var li = a.closest('li');
+            while (li && li.parentElement !== rootUl) {
+                li = li.parentElement ? li.parentElement.closest('li') : null;
+            }
+            sectionOf[id] = li;
         });
         var headings = document.querySelectorAll('.brief-content h2[id], .brief-content h3[id]');
         if (!headings.length) return;
 
         function setActive(id) {
             for (var k in links) links[k].classList.remove('active');
+            topLis.forEach(function (li) { li.classList.remove('expanded'); });
             if (links[id]) links[id].classList.add('active');
+            if (sectionOf[id]) sectionOf[id].classList.add('expanded');
         }
 
         var observer = new IntersectionObserver(function (entries) {

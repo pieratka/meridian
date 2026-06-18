@@ -72,17 +72,18 @@ If the articles are genuinely unrelated, say so briefly and summarize the domina
 PROMPT_BRIEF_SYNTHESIS = """
 Write today's intelligence brief in Markdown from the analyzed story clusters below.
 
-Use these section headings (omit a section only if there is genuinely nothing for it):
+Use these section headings, in this order (omit a section only if there is genuinely nothing for it):
 ## What matters now  — the 3-5 highest-impact stories, each a substantive paragraph, most important first
-## Global landscape  — other significant world / geopolitical / economic developments
+## Global landscape  — other significant world / geopolitical developments
 ## France  — developments concerning France (politics, society, economy)
-## Crypto & markets  — cryptocurrency and market developments
-## Tech & science  — technology, AI, and science developments
+## Tech & AI  — technology, artificial intelligence, and science developments
+## Finance & economy  — macroeconomics, markets, central banks, trade, and major companies
+## Crypto  — cryptocurrency and digital-asset developments
 ## Noteworthy  — smaller but interesting items, briefly
 
 Rules:
-- Cover EVERY significant cluster below. Do NOT drop the France or crypto stories — give them their own
-  sections even if globally smaller.
+- Cover EVERY significant cluster below. Do NOT drop the France, tech, finance, or crypto threads — give
+  them their own sections even if globally smaller.
 - One tight paragraph per story — 2-4 sentences, no padding or filler. Lead each with a **bold headline**.
 - Ground everything in the provided analyses; do not invent facts, sources, or dates. Do NOT add a dateline.
 - Stay factual and even-handed: attribute contested claims to who makes them and do not present any

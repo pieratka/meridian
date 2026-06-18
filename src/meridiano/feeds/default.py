@@ -17,6 +17,11 @@ RSS_FEEDS = [
     "https://www.francetvinfo.fr/titres.rss",                    # France Info (public broadcaster)
     "https://www.france24.com/fr/rss",                           # France 24 (public, international — neutral anchor)
     "https://www.lefigaro.fr/rss/figaro_actualites.xml",         # Le Figaro (center-right)
+    # --- Tech & AI ---
+    "https://feeds.arstechnica.com/arstechnica/index",           # Ars Technica
+    "https://techcrunch.com/feed/",                              # TechCrunch
+    "https://the-decoder.com/feed/",                             # The Decoder (AI-specialist)
+    "https://www.technologyreview.com/feed/",                    # MIT Technology Review
     # --- Crypto ecosystem ---
     "https://www.coindesk.com/arc/outboundfeeds/rss/",           # CoinDesk
     "https://cointelegraph.com/rss",                             # Cointelegraph
